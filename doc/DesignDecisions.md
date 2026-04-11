@@ -81,7 +81,7 @@ Concern: Reports CPU temperature, overall load percentage, and per-core frequenc
 
 ### Design:
 
-Temperature: hwmon discovery at startup — scan /sys/class/hwmon/hwmon*/name for k10temp, then find temp*_label containing Tccd1, read corresponding temp*_input (value in millidegrees, divide by 1000)
+Temperature: hwmon discovery at startup — scan /sys/class/hwmon/hwmon*/name for k10temp, then find temp*_label containing Tctl, read corresponding temp*_input (value in millidegrees, divide by 1000)
 Load: delta on /proc/stat first line — (total - idle) / total * 100 between two reads. Stores previous jiffies as instance fields
 Core frequencies: read /sys/devices/system/cpu/cpu<N>/cpufreq/scaling_cur_freq for even-numbered CPUs only (logical → physical core mapping for AMD). Value in kHz, convert to GHz
 initialize() performs hwmon discovery, logs ERROR and sets DEGRADED if k10temp not found (frequencies and load still work)
