@@ -46,7 +46,25 @@ java -jar target/linux-system-monitor-0.1.0-SNAPSHOT.jar
 | Filesystems | Used/free/total for `/`, `/home`, `/data` |
 | Network | LAN IP, link speed, upload/download rate |
 
-## Screenshot
+## Configuration
+
+On first run, create `~/.config/linux-system-monitor/config.properties`:
+
+```properties
+net.interface=enp9s0
+gpu.drm.path=/sys/class/drm/card1
+disk.sata.device=/dev/sda
+fs.mountpoints=/,/home,/data
+poll.interval.default=2
+poll.interval.filesystem=60
+poll.interval.disk.temp=15
+```
+
+If the file is absent, the application starts with built-in defaults and logs a warning.
+If a configured device or path does not exist, the affected collector is skipped and an error
+is logged — the rest of the application continues normally.
+
+## Fault Tolerance
 
 *TODO*
 

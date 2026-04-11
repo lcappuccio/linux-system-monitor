@@ -36,7 +36,20 @@ org.lcappuccio.systemmonitor
     └── PollerService.java     # ScheduledExecutorService, Platform.runLater()
 ```
 
-## Coding Rules
+## Configuration
+
+The application loads `~/.config/linux-system-monitor/config.properties` at startup.
+If absent, built-in defaults are used and a `WARN` is logged.
+Configurable values: `net.interface`, `gpu.drm.path`, `disk.sata.device`,
+`fs.mountpoints`, `poll.interval.default`, `poll.interval.filesystem`, `poll.interval.disk.temp`.
+
+## Fault Tolerance
+
+Each collector validates its paths and devices independently at startup.
+A missing or misconfigured device logs an `ERROR` and sets the collector status to `UNAVAILABLE`.
+The application never crashes due to a missing device or misconfigured path.
+Other collectors and the UI continue to function normally.
+The `CollectorStatus` enum (`OK`, `DEGRADED`, `UNAVAILABLE`) tracks per-collector health.
 
 - All collectors read from sysfs/procfs or invoke external commands (`sudo smartctl`, `sudo nvme`).
   No JNI or native bindings.
