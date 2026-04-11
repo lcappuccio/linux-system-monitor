@@ -1,6 +1,7 @@
 package org.lcappuccio.systemmonitor.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.junit.jupiter.api.Test;
@@ -32,5 +33,21 @@ class AppConfigTest {
     assertEquals("/", config.getFsMountpoints().get(0));
     assertEquals("/home", config.getFsMountpoints().get(1));
     assertEquals("/data", config.getFsMountpoints().get(2));
+  }
+
+  @Test
+  void getters_returnExpectedValues() {
+    AppConfig config = AppConfig.load();
+    assertEquals("enp9s0", config.getNetInterface());
+    assertEquals("/sys/class/drm/card1", config.getGpuDrmPath());
+    assertEquals("/dev/sda", config.getDiskSataDevice());
+  }
+
+  @Test
+  void pollIntervals_haveValidValues() {
+    AppConfig config = AppConfig.load();
+    assertFalse(config.getPollIntervalDefault() <= 0);
+    assertFalse(config.getPollIntervalFilesystem() <= 0);
+    assertFalse(config.getPollIntervalDiskTemp() <= 0);
   }
 }
