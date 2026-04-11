@@ -2,8 +2,6 @@ package org.lcappuccio.systemmonitor.collectors;
 
 import java.util.Optional;
 
-import org.lcappuccio.systemmonitor.collectors.CollectorStatus;
-
 /**
  * Contract for all system metric collectors.
  *
