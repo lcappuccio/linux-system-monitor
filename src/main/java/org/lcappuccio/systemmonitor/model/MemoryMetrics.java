@@ -8,9 +8,8 @@ package org.lcappuccio.systemmonitor.model;
  * @param swapUsedBytes used swap in bytes
  * @param swapTotalBytes total swap in bytes
  */
-public record MemoryMetrics (
+public record MemoryMetrics(
         long memUsedBytes,
         long memTotalBytes,
         long swapUsedBytes,
-        long swapTotalBytes
-) {}
+        long swapTotalBytes) {}
