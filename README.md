@@ -22,7 +22,7 @@ leo ALL=(ALL) NOPASSWD: /usr/sbin/smartctl
 ## Build
 
 ```bash
-mvn clean package
+mvn checkstyle:check sonar:sonar -Psonar
 ```
 
 ## Run

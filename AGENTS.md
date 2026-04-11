@@ -55,8 +55,8 @@ The `CollectorStatus` enum (`OK`, `DEGRADED`, `UNAVAILABLE`) tracks per-collecto
   No JNI or native bindings.
 - hwmon paths (`/sys/class/hwmon/hwmon*/`) must be **discovered at startup** by reading the `name` file,
   not hardcoded. Chip names to look for: `k10temp` (CPU), `amdgpu` (GPU), `nvme` (NVMe).
-- All file reads must handle `IOException` gracefully — return `null` or a sentinel value, log the error,
-  never crash the poller.
+- All file reads must handle IOException gracefully — return Optional.empty() or empty collection, log the error, 
+ never crash the poller.
 - Polling interval is **2 seconds** for all metrics except filesystems (60s) and storage temps (15s).
 - UI updates must always go through `Platform.runLater()`.
 - Rate metrics (CPU load, net speed) require **delta calculation** between two consecutive reads.
@@ -78,7 +78,7 @@ mvn javafx:run
 mvn test
 
 # Code quality
-mvn checkstyle:check spotbugs:check
+mvn checkstyle:check sonar:sonar -Psonar
 ```
 
 ## Do Not
