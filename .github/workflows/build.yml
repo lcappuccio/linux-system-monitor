@@ -9,19 +9,17 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Java 21
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: maven
 
       - name: Build and test
+        uses: GabrielBB/xvfb-action@v1
         run: mvn -B clean test
 
       - name: Checkstyle
@@ -30,4 +28,5 @@ jobs:
       - name: SonarCloud
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        uses: GabrielBB/xvfb-action@v1
         run: mvn -B sonar:sonar -Psonar
