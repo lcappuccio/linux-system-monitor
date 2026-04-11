@@ -65,7 +65,7 @@ mvn javafx:run
 mvn test
 
 # Code quality
-mvn checkstyle:check sonar:sonar -Psonar
+mvn checkstyle:check spotbugs:check
 ```
 
 ## Do Not
@@ -75,3 +75,32 @@ mvn checkstyle:check sonar:sonar -Psonar
 - Do not block the JavaFX Application Thread.
 - Do not add dependencies without discussing first.
 - Do not target Windows or macOS.
+
+## Strict Prohibitions
+
+These are non-negotiable architectural rules. Violating them will be rejected in review.
+
+**No Lombok.** All constructors, getters, and builders must be written explicitly.
+Annotation-based code generation obscures intent and interferes with static analysis.
+
+**No blocking I/O on any thread other than the collector's scheduled thread.**
+All file reads and process invocations happen inside `ScheduledExecutorService` tasks only.
+Never read from sysfs/procfs or invoke external commands from the JavaFX Application Thread.
+
+**No null returns.** Returning null is not permitted anywhere in this codebase.
+- Single optional values: return `Optional<T>`
+- Collections: return an empty collection
+- Callers must never receive null and must not check for it
+
+**`Optional` as return type only.** Never use `Optional<T>` as a method parameter or field type.
+It exists solely to express the possibility of absence in a return value.
+Callers pass concrete types; if absence must be expressed, use overloading or a documented default.
+
+**No leaky interfaces.** The `Collector` interface and any other interface definitions
+must only use types from `java.*` packages in their method signatures.
+No SLF4J, no JavaFX, no third-party types in interface contracts.
+Implementations may import freely; interfaces may not.
+
+**No mutable result objects.** Collector output must be immutable records
+(`CpuMetrics`, `GpuMetrics`, `MemMetrics`, `DiskMetrics`, `FsMetrics`, `NetMetrics`).
+Do not pass mutable containers or shared state between the poller and the UI.

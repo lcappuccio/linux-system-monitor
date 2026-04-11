@@ -16,6 +16,7 @@ JavaFX 21 / Java 21 Linux system monitor. Maven build. Target platform: Ubuntu, 
 ## Patterns
 
 - Collectors return `Optional<T>` or a domain-specific result object — never raw `null`.
+- `Optional<T>` is a return type only — never use it as a method parameter or field type.
 - File reads: always use `try-with-resources` and `Files.readString()` / `Files.readAllLines()`.
 - External process invocation (`smartctl`, `nvme`): use `ProcessBuilder`, capture stdout,
   check exit code before parsing output.
