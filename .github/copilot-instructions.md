@@ -6,7 +6,8 @@ JavaFX 21 / Java 21 Linux system monitor. Maven build. Target platform: Ubuntu, 
 
 ## Style
 
-- Use `var` where the type is obvious from the right-hand side.
+- Use `var` only when the type is unambiguous from the right-hand side. Avoid it for method
+  return values, streams, or complex generics.
 - Prefer records for simple immutable data carriers.
 - Use `Optional` instead of returning `null` from collector methods.
 - All public classes and methods must have Javadoc.

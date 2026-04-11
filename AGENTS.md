@@ -115,5 +115,5 @@ No SLF4J, no JavaFX, no third-party types in interface contracts.
 Implementations may import freely; interfaces may not.
 
 **No mutable result objects.** Collector output must be immutable records
-(`CpuMetrics`, `GpuMetrics`, `MemMetrics`, `DiskMetrics`, `FsMetrics`, `NetMetrics`).
+(`CpuMetrics`, `GpuMetrics`, `MemoryMetrics`, `DiskMetrics`, `FileSystemMetrics`, `NetworkMetrics`).
 Do not pass mutable containers or shared state between the poller and the UI.
