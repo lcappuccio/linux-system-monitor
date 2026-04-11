@@ -22,6 +22,7 @@ jobs:
           cache: maven
 
       - name: Build and test
+        uses: GabrielBB/xvfb-action@v1
         run: mvn -B clean test
 
       - name: Checkstyle
@@ -30,4 +31,5 @@ jobs:
       - name: SonarCloud
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        uses: GabrielBB/xvfb-action@v1
         run: mvn -B sonar:sonar -Psonar
