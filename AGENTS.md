@@ -77,6 +77,9 @@ mvn javafx:run
 # Run tests
 mvn test
 
+# Checkstyle
+mvn checkstyle:check 
+
 # Code quality
 mvn checkstyle:check sonar:sonar -Psonar
 ```
