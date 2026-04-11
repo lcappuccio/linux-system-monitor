@@ -13,6 +13,13 @@ import org.lcappuccio.systemmonitor.ui.MetricRow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Service that polls system metric collectors at configured intervals and updates the UI.
+ *
+ * <p>Uses a {@link ScheduledExecutorService} with separate threads for different polling intervals:
+ * default (2s), filesystem (60s), and disk temperature (15s). All UI updates go through
+ * {@link Platform#runLater()} to ensure thread safety.
+ */
 public class PollerService {
 
   private static final Logger LOG = LoggerFactory.getLogger(PollerService.class);
@@ -24,6 +31,15 @@ public class PollerService {
   private final List<Collector<?>> filesystemCollectors;
   private final List<Collector<?>> diskTempCollectors;
 
+  /**
+   * Creates a new PollerService with the given configuration and UI components.
+   *
+   * @param config the application configuration
+   * @param rows the observable list of metric rows to update
+   * @param defaultCollectors collectors polled at default interval (2s)
+   * @param filesystemCollectors collectors polled at filesystem interval (60s)
+   * @param diskTempCollectors collectors polled at disk temperature interval (15s)
+   */
   public PollerService(AppConfig config, ObservableList<MetricRow> rows,
       List<Collector<?>> defaultCollectors, List<Collector<?>> filesystemCollectors,
       List<Collector<?>> diskTempCollectors) {
@@ -57,6 +73,16 @@ public class PollerService {
             (existing, replacement) -> existing));
   }
 
+  /**
+   * Starts the polling service with configured intervals.
+   *
+   * <p>Schedules three separate executor threads:
+   * <ul>
+   *   <li>Default collectors (CPU, GPU, memory, network) at 2-second intervals</li>
+   *   <li>Filesystem collectors at 60-second intervals</li>
+   *   <li>Disk temperature collectors at 15-second intervals</li>
+   * </ul>
+   */
   public void start() {
     long defaultInterval = getPollInterval(config());
     long filesystemInterval = getFilesystemInterval(config());
@@ -147,6 +173,12 @@ public class PollerService {
     }
   }
 
+  /**
+   * Shuts down the polling service and terminates all executor threads.
+   *
+   * <p>Attempts graceful shutdown with a 5-second timeout. If threads don't terminate
+   * in time, forces shutdown and logs a warning.
+   */
   public void shutdown() {
     LOG.info("Shutting down PollerService");
     executor.shutdownNow();
