@@ -10,7 +10,7 @@ package org.lcappuccio.systemmonitor.collectors;
  * </ul>
  */
 public enum CollectorStatus {
-    OK,
-    DEGRADED,
-    UNAVAILABLE
+  OK,
+  DEGRADED,
+  UNAVAILABLE
 }

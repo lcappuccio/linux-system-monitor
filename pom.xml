@@ -129,7 +129,7 @@
                     </dependency>
                 </dependencies>
                 <configuration>
-                    <configLocation>src/main/resources/checkstyle.xml</configLocation>
+                    <configLocation>google_checks.xml</configLocation>
                     <consoleOutput>true</consoleOutput>
                     <failsOnError>true</failsOnError>
                     <violationSeverity>warning</violationSeverity>

@@ -10,17 +10,19 @@ import java.util.Map;
  * @param usage map of mount point to {@link FileSystemUsage}
  */
 public record FileSystemMetrics(
-        Map<String, FileSystemUsage> usage) {
+    Map<String, FileSystemUsage> usage) {
 
-    /**
-     * Usage data for a single mount point.
-     *
-     * @param usedBytes  used space in bytes
-     * @param freeBytes  free space in bytes
-     * @param totalBytes total space in bytes
-     */
-    public record FileSystemUsage(
-            long usedBytes,
-            long freeBytes,
-            long totalBytes) {}
+  /**
+   * Usage data for a single mount point.
+   *
+   * @param usedBytes  used space in bytes
+   * @param freeBytes  free space in bytes
+   * @param totalBytes total space in bytes
+   */
+  public record FileSystemUsage(
+      long usedBytes,
+      long freeBytes,
+      long totalBytes) {
+
+  }
 }

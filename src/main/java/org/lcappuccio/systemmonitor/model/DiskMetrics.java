@@ -7,6 +7,8 @@ package org.lcappuccio.systemmonitor.model;
  * @param sataTempCelsius SATA SSD temperature in °C
  */
 public record DiskMetrics(
-        double nvmeTempCelsius,
-        double sataTempCelsius
-) {}
+    double nvmeTempCelsius,
+    double sataTempCelsius
+) {
+
+}

@@ -10,7 +10,9 @@ import java.util.List;
  * @param coreFrequenciesGhz per-core frequency in GHz, indexed by physical core number
  */
 public record CpuMetrics(
-        double temperatureCelsius,
-        double loadPercent,
-        List<Double> coreFrequenciesGhz
-) {}
+    double temperatureCelsius,
+    double loadPercent,
+    List<Double> coreFrequenciesGhz
+) {
+
+}

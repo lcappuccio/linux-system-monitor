@@ -12,11 +12,13 @@ package org.lcappuccio.systemmonitor.model;
  * @param powerWatts             GPU power draw in watts (PPT)
  */
 public record GpuMetrics(
-        double temperatureCelsius,
-        double loadPercent,
-        long vramUsedBytes,
-        long vramTotalBytes,
-        double vramTemperatureCelsius,
-        double vramLoadPercent,
-        double powerWatts
-) {}
+    double temperatureCelsius,
+    double loadPercent,
+    long vramUsedBytes,
+    long vramTotalBytes,
+    double vramTemperatureCelsius,
+    double vramLoadPercent,
+    double powerWatts
+) {
+
+}
