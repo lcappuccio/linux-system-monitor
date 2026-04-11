@@ -6,7 +6,7 @@ JavaFX 21 / Java 21 Linux system monitor. Maven build. Target platform: Ubuntu, 
 
 ## Style
 
-- Use `var` where the type is obvious from the right-hand side.
+- Always declare explicit types. Do not use `var`.
 - Prefer records for simple immutable data carriers.
 - Use `Optional` instead of returning `null` from collector methods.
 - All public classes and methods must have Javadoc.

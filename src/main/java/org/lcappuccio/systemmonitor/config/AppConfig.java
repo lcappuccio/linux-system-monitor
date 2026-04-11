@@ -88,6 +88,8 @@ public final class AppConfig {
   }
 
   /**
+   * Returns the network interface name.
+   *
    * @return network interface name, e.g. {@code enp9s0}
    */
   public String getNetInterface() {
@@ -95,6 +97,8 @@ public final class AppConfig {
   }
 
   /**
+   * Returns the DRM sysfs path for the GPU.
+   *
    * @return DRM sysfs path for the GPU, e.g. {@code /sys/class/drm/card1}
    */
   public String getGpuDrmPath() {
@@ -102,6 +106,8 @@ public final class AppConfig {
   }
 
   /**
+   * Returns the SATA disk device path.
+   *
    * @return SATA disk device path, e.g. {@code /dev/sda}
    */
   public String getDiskSataDevice() {
@@ -109,6 +115,8 @@ public final class AppConfig {
   }
 
   /**
+   * Returns the list of filesystem mount points to monitor.
+   *
    * @return list of filesystem mount points to monitor
    */
   public List<String> getFsMountpoints() {
@@ -116,6 +124,8 @@ public final class AppConfig {
   }
 
   /**
+   * Returns the default polling interval in seconds.
+   *
    * @return default polling interval in seconds
    */
   public int getPollIntervalDefault() {
@@ -123,6 +133,8 @@ public final class AppConfig {
   }
 
   /**
+   * Returns the filesystem polling interval in seconds.
+   *
    * @return filesystem polling interval in seconds
    */
   public int getPollIntervalFilesystem() {
@@ -130,6 +142,8 @@ public final class AppConfig {
   }
 
   /**
+   * Returns the disk temperature polling interval in seconds.
+   *
    * @return disk temperature polling interval in seconds
    */
   public int getPollIntervalDiskTemp() {
