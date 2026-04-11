@@ -11,25 +11,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Application configuration loaded from {@code ~/.config/linux-system-monitor/config.properties}.
+ * Application configuration loaded from bundled defaults and an optional user config file.
  *
- * <p>If the file is absent, built-in defaults are used and a warning is logged.
- * If a property is missing, its default value is used silently.
+ * <p>Loading order:
+ * <ol>
+ *   <li>Bundled {@code config.properties} from classpath (always present)</li>
+ *   <li>User config at {@code ~/.config/linux-system-monitor/config.properties} (optional)</li>
+ * </ol>
+ *
+ * <p>If the user config is absent a warning is logged and bundled defaults are used.
+ * If a property value is invalid an error is logged and the bundled default is used.
  */
 public final class AppConfig {
 
   private static final Logger LOG = LoggerFactory.getLogger(AppConfig.class);
-  private static final String CONFIG_PATH =
+  private static final String BUNDLED_CONFIG = "/config.properties";
+  private static final String USER_CONFIG_PATH =
       System.getProperty("user.home") + "/.config/linux-system-monitor/config.properties";
-
-  // Defaults
-  private static final String DEFAULT_NET_INTERFACE = "enp9s0";
-  private static final String DEFAULT_GPU_DRM_PATH = "/sys/class/drm/card1";
-  private static final String DEFAULT_DISK_SATA_DEVICE = "/dev/sda";
-  private static final String DEFAULT_FS_MOUNTPOINTS = "/,/home,/data";
-  private static final int DEFAULT_POLL_INTERVAL = 2;
-  private static final int DEFAULT_POLL_INTERVAL_FS = 60;
-  private static final int DEFAULT_POLL_INTERVAL_DISK_TEMP = 15;
 
   private final String netInterface;
   private final String gpuDrmPath;
@@ -40,75 +38,91 @@ public final class AppConfig {
   private final int pollIntervalDiskTemp;
 
   private AppConfig(Properties props) {
-    this.netInterface = props.getProperty("net.interface", DEFAULT_NET_INTERFACE);
-    this.gpuDrmPath = props.getProperty("gpu.drm.path", DEFAULT_GPU_DRM_PATH);
-    this.diskSataDevice = props.getProperty("disk.sata.device", DEFAULT_DISK_SATA_DEVICE);
-    this.fsMountpoints = Arrays.asList(
-        props.getProperty("fs.mountpoints", DEFAULT_FS_MOUNTPOINTS).split(","));
-    this.pollIntervalDefault =
-        parseInt(props, "poll.interval.default", DEFAULT_POLL_INTERVAL);
-    this.pollIntervalFilesystem =
-        parseInt(props, "poll.interval.filesystem", DEFAULT_POLL_INTERVAL_FS);
-    this.pollIntervalDiskTemp =
-        parseInt(props, "poll.interval.disk.temp", DEFAULT_POLL_INTERVAL_DISK_TEMP);
+    this.netInterface = props.getProperty("net.interface");
+    this.gpuDrmPath = props.getProperty("gpu.drm.path");
+    this.diskSataDevice = props.getProperty("disk.sata.device");
+    this.fsMountpoints = Arrays.asList(props.getProperty("fs.mountpoints").split(","));
+    this.pollIntervalDefault = parseInt(props, "poll.interval.default", 2);
+    this.pollIntervalFilesystem = parseInt(props, "poll.interval.filesystem", 60);
+    this.pollIntervalDiskTemp = parseInt(props, "poll.interval.disk.temp", 15);
   }
 
   /**
-   * Loads configuration from the default path, falling back to built-in defaults if absent.
+   * Loads configuration from bundled defaults overlaid with the user config file if present.
    *
    * @return a fully populated {@link AppConfig} instance
    */
   public static AppConfig load() {
-    var props = new Properties();
-    var configFile = Paths.get(CONFIG_PATH);
-    if (Files.exists(configFile)) {
-      try (InputStream in = Files.newInputStream(configFile)) {
-        props.load(in);
-        LOG.info("Loaded configuration from {}", CONFIG_PATH);
-      } catch (IOException e) {
-        LOG.warn("Failed to read config file {}, using defaults: {}", CONFIG_PATH, e.getMessage());
-      }
-    } else {
-      LOG.warn("Config file not found at {}, using built-in defaults", CONFIG_PATH);
-    }
+    Properties props = loadBundledDefaults();
+    overlayUserConfig(props);
     return new AppConfig(props);
   }
 
-  private static int parseInt(Properties props, String key, int defaultValue) {
-    var raw = props.getProperty(key);
+  private static Properties loadBundledDefaults() {
+    Properties props = new Properties();
+    try (InputStream in = AppConfig.class.getResourceAsStream(BUNDLED_CONFIG)) {
+      if (in == null) {
+        LOG.error("Bundled config not found on classpath: {}", BUNDLED_CONFIG);
+      } else {
+        props.load(in);
+        LOG.debug("Loaded bundled defaults from {}", BUNDLED_CONFIG);
+      }
+    } catch (IOException e) {
+      LOG.error("Failed to load bundled config: {}", e.getMessage());
+    }
+    return props;
+  }
+
+  private static void overlayUserConfig(Properties props) {
+    var userConfig = Paths.get(USER_CONFIG_PATH);
+    if (!Files.exists(userConfig)) {
+      LOG.warn("User config not found at {}, using bundled defaults", USER_CONFIG_PATH);
+      return;
+    }
+    try (InputStream in = Files.newInputStream(userConfig)) {
+      props.load(in);
+      LOG.info("Loaded user config from {}", USER_CONFIG_PATH);
+    } catch (IOException e) {
+      LOG.warn("Failed to read user config {}, using bundled defaults: {}",
+          USER_CONFIG_PATH, e.getMessage());
+    }
+  }
+
+  private static int parseInt(Properties props, String key, int fallback) {
+    String raw = props.getProperty(key);
     if (raw == null) {
-      return defaultValue;
+      return fallback;
     }
     try {
       return Integer.parseInt(raw.trim());
     } catch (NumberFormatException e) {
-      LOG.warn("Invalid integer value for '{}': '{}', using default {}", key, raw, defaultValue);
-      return defaultValue;
+      LOG.error("Invalid integer for '{}': '{}', using fallback {}", key, raw, fallback);
+      return fallback;
     }
   }
 
   /**
-   * Returns the network interface name.
+   * Returns the network interface name, e.g. {@code enp9s0}.
    *
-   * @return network interface name, e.g. {@code enp9s0}
+   * @return network interface name
    */
   public String getNetInterface() {
     return netInterface;
   }
 
   /**
-   * Returns the DRM sysfs path for the GPU.
+   * Returns the DRM sysfs path for the GPU, e.g. {@code /sys/class/drm/card1}.
    *
-   * @return DRM sysfs path for the GPU, e.g. {@code /sys/class/drm/card1}
+   * @return GPU DRM path
    */
   public String getGpuDrmPath() {
     return gpuDrmPath;
   }
 
   /**
-   * Returns the SATA disk device path.
+   * Returns the SATA disk device path, e.g. {@code /dev/sda}.
    *
-   * @return SATA disk device path, e.g. {@code /dev/sda}
+   * @return SATA device path
    */
   public String getDiskSataDevice() {
     return diskSataDevice;
@@ -117,7 +131,7 @@ public final class AppConfig {
   /**
    * Returns the list of filesystem mount points to monitor.
    *
-   * @return list of filesystem mount points to monitor
+   * @return list of mount point paths
    */
   public List<String> getFsMountpoints() {
     return fsMountpoints;
@@ -126,7 +140,7 @@ public final class AppConfig {
   /**
    * Returns the default polling interval in seconds.
    *
-   * @return default polling interval in seconds
+   * @return polling interval in seconds
    */
   public int getPollIntervalDefault() {
     return pollIntervalDefault;
