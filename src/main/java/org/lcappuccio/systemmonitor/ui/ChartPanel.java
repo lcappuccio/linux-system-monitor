@@ -40,8 +40,8 @@ public class ChartPanel {
   private final Map<String, ArrayDeque<Double>> history;
   private final Map<String, Double> lastKnownValue;
   private final LineChart<Number, Number> chart;
-  private final NumberAxis xAxis;
-  private final NumberAxis yAxis;
+  private final NumberAxis axisX;
+  private final NumberAxis axisY;
   private final Timeline timeline;
 
   private String selectedKey = null;
@@ -56,15 +56,15 @@ public class ChartPanel {
   public ChartPanel(ObservableList<MetricRow> rows) {
     this.history = new HashMap<>();
     this.lastKnownValue = new HashMap<>();
-    this.xAxis = new NumberAxis();
-    this.yAxis = new NumberAxis();
+    this.axisX = new NumberAxis();
+    this.axisY = new NumberAxis();
     this.chart = buildChart();
     this.root = new StackPane(chart);
     this.timeline = buildTimeline();
 
-    xAxis.setLabel("Samples (2s each)");
-    xAxis.setAutoRanging(true);
-    yAxis.setAutoRanging(true);
+    axisX.setLabel("Samples (2s each)");
+    axisX.setAutoRanging(true);
+    axisY.setAutoRanging(true);
 
     subscribeToRows(rows);
     timeline.play();
@@ -177,7 +177,7 @@ public class ChartPanel {
   }
 
   private LineChart<Number, Number> buildChart() {
-    LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
+    LineChart<Number, Number> lineChart = new LineChart<>(axisX, axisY);
     lineChart.setAnimated(false);
     lineChart.setCreateSymbols(false);
     lineChart.setTitle("Select a metric from the table");
