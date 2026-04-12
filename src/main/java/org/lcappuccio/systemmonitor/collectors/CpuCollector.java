@@ -57,23 +57,28 @@ public class CpuCollector implements Collector<CpuMetrics> {
     coreIds.clear();
     try {
       Path cpuDir = Paths.get(SYS_CPU_PATH);
-      DirectoryStream<Path> stream = Files.newDirectoryStream(cpuDir, "cpu[0-9]*");
-      for (Path entry : stream) {
-        String name = entry.getFileName().toString();
-        if (name.startsWith("cpu") && Files.isDirectory(entry)) {
-          try {
-            int id = Integer.parseInt(name.substring(3));
-            if (id % 2 == 0) {
-              coreIds.add(id);
+      try (DirectoryStream<Path> stream = Files.newDirectoryStream(cpuDir, "cpu[0-9]*")) {
+        for (Path entry : stream) {
+          String name = entry.getFileName().toString();
+          if (name.startsWith("cpu") && Files.isDirectory(entry)) {
+            try {
+              int id = Integer.parseInt(name.substring(3));
+              if (id % 2 == 0) {
+                coreIds.add(id);
+              }
+            } catch (NumberFormatException e) {
+              // skip non-cpu directories
             }
-          } catch (NumberFormatException e) {
-            // skip non-cpu directories
           }
         }
+        coreIds.sort(Integer::compareTo);
+      } catch (IOException e) {
+        LOG.error("Failed to discover CPU cores: {}", e.getMessage());
       }
-      coreIds.sort(Integer::compareTo);
-    } catch (IOException e) {
-      LOG.error("Failed to discover CPU cores: {}", e.getMessage());
+    } finally {
+      if (coreIds.isEmpty()) {
+        LOG.error("No CPU cores discovered");
+      }
     }
   }
 
