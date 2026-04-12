@@ -121,10 +121,11 @@ public class DiskCollector implements Collector<DiskMetrics> {
       device = "/dev/" + device;
     }
 
+    Process process = null;
     try {
-      ProcessBuilder pb = new ProcessBuilder("sudo", "smartctl", "-A", device);
-      pb.redirectErrorStream(true);
-      Process process = pb.start();
+      process = new ProcessBuilder("sudo", "smartctl", "-A", device)
+          .redirectErrorStream(true)
+          .start();
 
       boolean exited = process.waitFor(5, TimeUnit.SECONDS);
       if (!exited || process.exitValue() != 0) {
@@ -143,6 +144,10 @@ public class DiskCollector implements Collector<DiskMetrics> {
       }
     } catch (Exception e) {
       LOG.debug("Failed to read SATA temp: {}", e.getMessage());
+    } finally {
+      if (process != null && process.isAlive()) {
+        process.destroyForcibly();
+      }
     }
     return NO_TEMP;
   }

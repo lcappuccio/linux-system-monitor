@@ -53,15 +53,20 @@ public class FileSystemCollector implements Collector<FileSystemMetrics> {
   }
 
   private boolean isMountValid(String mountPoint) {
+    Process process = null;
     try {
-      ProcessBuilder pb = new ProcessBuilder("df", mountPoint);
-      pb.redirectErrorStream(true);
-      Process process = pb.start();
+      process = new ProcessBuilder("df", mountPoint)
+          .redirectErrorStream(true)
+          .start();
       int exitCode = process.waitFor();
       return exitCode == 0;
     } catch (IOException | InterruptedException e) {
       LOG.error("Cannot access mount point {}: {}", mountPoint, e.getMessage());
       return false;
+    } finally {
+      if (process != null && process.isAlive()) {
+        process.destroyForcibly();
+      }
     }
   }
 
@@ -97,33 +102,37 @@ public class FileSystemCollector implements Collector<FileSystemMetrics> {
   }
 
   private FileSystemMetrics.FileSystemUsage getUsageForMount(String mountPoint) throws IOException {
-    ProcessBuilder pb = new ProcessBuilder("df", "-B1", mountPoint);
-    pb.redirectErrorStream(true);
-    Process process = pb.start();
+    Process process = null;
+    try {
+      process = new ProcessBuilder("df", "-B1", mountPoint)
+          .redirectErrorStream(true)
+          .start();
 
-    try (BufferedReader reader = new BufferedReader(
-        new InputStreamReader(process.getInputStream()))) {
-      String line;
-      // Skip header line
-      reader.readLine();
-      line = reader.readLine();
+      try (BufferedReader reader = new BufferedReader(
+          new InputStreamReader(process.getInputStream()))) {
+        String line;
+        reader.readLine();
+        line = reader.readLine();
 
-      if (line == null) {
-        return null;
+        if (line == null) {
+          return null;
+        }
+
+        String[] parts = line.trim().split("\\s+");
+        if (parts.length < 4) {
+          return null;
+        }
+
+        long total = Long.parseLong(parts[1]);
+        long used = Long.parseLong(parts[2]);
+        long free = Long.parseLong(parts[3]);
+
+        return new FileSystemMetrics.FileSystemUsage(used, free, total);
       }
-
-      // df --block-size=1 output: Filesystem 1B-blocks Used Available Use% Mounted on
-      String[] parts = line.trim().split("\\s+");
-      if (parts.length < 4) {
-        return null;
+    } finally {
+      if (process != null && process.isAlive()) {
+        process.destroyForcibly();
       }
-
-      // parts: [0]=Filesystem, [1]=1B-blocks, [2]=Used, [3]=Available, [4]=Use%, [5]=Mounted
-      long total = Long.parseLong(parts[1]);
-      long used = Long.parseLong(parts[2]);
-      long free = Long.parseLong(parts[3]);
-
-      return new FileSystemMetrics.FileSystemUsage(used, free, total);
     }
   }
 
