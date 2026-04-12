@@ -67,7 +67,7 @@ public class MainWindow {
     defaultCollectors.add(new CpuCollector());
     defaultCollectors.add(new MemoryCollector());
     defaultCollectors.add(new GpuCollector());
-    defaultCollectors.add(new NetworkCollector());
+    defaultCollectors.add(new NetworkCollector(config));
 
     List<Collector<?>> filesystemCollectors = new ArrayList<>();
     filesystemCollectors.add(new FileSystemCollector(config));

@@ -151,6 +151,13 @@ public class PollerService {
         setIfPresent("Memory.Total", formatBytes(mem.memTotalBytes()));
         setIfPresent("Memory.Swap Used", formatBytes(mem.swapUsedBytes()));
       });
+    } else if (metrics instanceof org.lcappuccio.systemmonitor.model.NetworkMetrics net) {
+      Platform.runLater(() -> {
+        setIfPresent("Network.IP Address", net.ipAddress());
+        setIfPresent("Network.Link Speed", net.linkSpeedMbps() + " Mbps");
+        setIfPresent("Network.Upload", formatBytesPerSec(net.uploadBytesPerSec()));
+        setIfPresent("Network.Download", formatBytesPerSec(net.downloadBytesPerSec()));
+      });
     } else if (metrics instanceof org.lcappuccio.systemmonitor.model.FileSystemMetrics fs) {
       Platform.runLater(() -> {
         for (var entry : fs.usage().entrySet()) {
@@ -193,6 +200,18 @@ public class PollerService {
       return (bytes / (1024 * 1024)) + " MB";
     } else {
       return Math.round(bytes / (1024.0 * 1024 * 1024)) + " GB";
+    }
+  }
+
+  private String formatBytesPerSec(long bytes) {
+    if (bytes < 1024) {
+      return bytes + " B/s";
+    } else if (bytes < 1024 * 1024) {
+      return String.format("%.1f KB/s", bytes / 1024.0);
+    } else if (bytes < 1024 * 1024 * 1024) {
+      return String.format("%.1f MB/s", bytes / (1024.0 * 1024));
+    } else {
+      return String.format("%.2f GB/s", bytes / (1024.0 * 1024 * 1024));
     }
   }
 
