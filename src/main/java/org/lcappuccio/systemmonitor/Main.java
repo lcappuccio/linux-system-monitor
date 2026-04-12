@@ -16,8 +16,8 @@ import org.slf4j.LoggerFactory;
 public class Main extends Application {
 
   private static final Logger LOG = LoggerFactory.getLogger(Main.class);
-  private static final int WINDOW_WIDTH = 1200;
-  private static final int WINDOW_HEIGHT = 800;
+  private static final int WINDOW_WIDTH = 1680;
+  private static final int WINDOW_HEIGHT = 900;
 
   /**
    * JavaFX application entry point.

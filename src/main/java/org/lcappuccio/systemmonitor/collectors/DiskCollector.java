@@ -23,7 +23,6 @@ public class DiskCollector implements Collector<DiskMetrics> {
   private static final String HWMON_PATH = "/sys/class/hwmon";
   private static final double NO_TEMP = Double.NaN;
 
-  private final AppConfig config;
   private final String sataDevice;
   private String nvmeHwmonPath = null;
   private String nvmeTempPath = null;
@@ -31,7 +30,6 @@ public class DiskCollector implements Collector<DiskMetrics> {
   private CollectorStatus status = CollectorStatus.UNAVAILABLE;
 
   public DiskCollector(AppConfig config) {
-    this.config = config;
     this.sataDevice = config.getDiskSataDevice();
   }
 

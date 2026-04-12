@@ -29,6 +29,9 @@ public final class AppConfig {
   private static final String USER_CONFIG_PATH =
       System.getProperty("user.home") + "/.config/linux-system-monitor/config.properties";
 
+  private final int historySize;
+  private final double tickSeconds;
+
   private final String netInterface;
   private final String gpuDrmPath;
   private final String diskSataDevice;
@@ -38,15 +41,37 @@ public final class AppConfig {
   private final int pollIntervalFilesystem;
   private final int pollIntervalDiskTemp;
 
+  private final String colorCpu;
+  private final String colorGpu;
+  private final String colorVram;
+  private final String colorNvme;
+  private final String colorSata;
+  private final String colorMemoryUsed;
+  private final String colorSwapUsed;
+  private final List<String> colorCpuClocks;
+
   private AppConfig(Properties props) {
-    this.netInterface = props.getProperty("net.interface");
-    this.gpuDrmPath = props.getProperty("gpu.drm.path");
-    this.diskSataDevice = props.getProperty("disk.sata.device");
-    this.networkSpeedUnit = props.getProperty("network.speed.unit");
-    this.fsMountpoints = Arrays.asList(props.getProperty("fs.mountpoints").split(","));
+    this.netInterface = props.getProperty("net.interface", "enp9s0");
+    this.gpuDrmPath = props.getProperty("gpu.drm.path", "/sys/class/drm/card1");
+    this.diskSataDevice = props.getProperty("disk.sata.device", "/dev/sda");
+    this.networkSpeedUnit = props.getProperty("network.speed.unit", "Kbps");
+    this.fsMountpoints = Arrays.asList(props.getProperty("fs.mountpoints", "/,/home,/data")
+        .split(","));
     this.pollIntervalDefault = parseInt(props, "poll.interval.default", 2);
     this.pollIntervalFilesystem = parseInt(props, "poll.interval.filesystem", 60);
     this.pollIntervalDiskTemp = parseInt(props, "poll.interval.disk.temp", 15);
+    this.historySize = parseInt(props, "history.size", 25);
+    this.tickSeconds = Double.parseDouble(props.getProperty("tick.seconds", "2"));
+    this.colorCpu = props.getProperty("chart.color.cpu", "#0A6FC2");
+    this.colorGpu = props.getProperty("chart.color.gpu", "#F44336");
+    this.colorVram = props.getProperty("chart.color.vram", "#FF9800");
+    this.colorNvme = props.getProperty("chart.color.nvme", "#9E9E9E");
+    this.colorSata = props.getProperty("chart.color.sata", "#607D8B");
+    this.colorMemoryUsed = props.getProperty("chart.color.memory.used", "#2EB82E");
+    this.colorSwapUsed = props.getProperty("chart.color.swap.used", "#FFCCFF");
+    this.colorCpuClocks = Arrays.asList(props.getProperty("chart.color.cpu.clocks",
+        "#0A305C,#0D3C73,#0F488A,#1254A1,#1461B8,#176DCF,#176DCF,#3086E8,#4794EB,"
+            + "#5EA1ED,#75AEF0,#8CBCF2,#A3C9F5,#BAD7F7,#D1E4FA,#E8F2FC").split(","));
   }
 
   /**
@@ -104,9 +129,27 @@ public final class AppConfig {
   }
 
   /**
+   * Returns the configured history size for charts.
+   *
+   * @return the value
+   */
+  public int getHistorySize() {
+    return historySize;
+  }
+
+  /**
+   * Returns the configured tick for charts in seconds.
+   *
+   * @return the value
+   */
+  public Double getTickSeconds() {
+    return tickSeconds;
+  }
+
+  /**
    * Returns the network interface name, e.g. {@code enp9s0}.
    *
-   * @return network interface name
+   * @return network interface name.
    */
   public String getNetInterface() {
     return netInterface;
@@ -115,7 +158,7 @@ public final class AppConfig {
   /**
    * Returns the DRM sysfs path for the GPU, e.g. {@code /sys/class/drm/card1}.
    *
-   * @return GPU DRM path
+   * @return GPU DRM path.
    */
   public String getGpuDrmPath() {
     return gpuDrmPath;
@@ -124,7 +167,7 @@ public final class AppConfig {
   /**
    * Returns the SATA disk device path, e.g. {@code /dev/sda}.
    *
-   * @return SATA device path
+   * @return SATA device path.
    */
   public String getDiskSataDevice() {
     return diskSataDevice;
@@ -133,7 +176,7 @@ public final class AppConfig {
   /**
    * Returns the list of filesystem mount points to monitor.
    *
-   * @return list of mount point paths
+   * @return list of mount point paths.
    */
   public List<String> getFsMountpoints() {
     return fsMountpoints;
@@ -142,7 +185,7 @@ public final class AppConfig {
   /**
    * Returns the default polling interval in seconds.
    *
-   * @return polling interval in seconds
+   * @return polling interval in seconds.
    */
   public int getPollIntervalDefault() {
     return pollIntervalDefault;
@@ -151,7 +194,7 @@ public final class AppConfig {
   /**
    * Returns the filesystem polling interval in seconds.
    *
-   * @return filesystem polling interval in seconds
+   * @return filesystem polling interval in seconds.
    */
   public int getPollIntervalFilesystem() {
     return pollIntervalFilesystem;
@@ -160,7 +203,7 @@ public final class AppConfig {
   /**
    * Returns the disk temperature polling interval in seconds.
    *
-   * @return disk temperature polling interval in seconds
+   * @return disk temperature polling interval in seconds.
    */
   public int getPollIntervalDiskTemp() {
     return pollIntervalDiskTemp;
@@ -169,9 +212,81 @@ public final class AppConfig {
   /**
    * Returns the selected network speed for charts.
    *
-   * @return network metric to be used in network chart
+   * @return network metric to be used in network chart.
    */
   public String getNetworkSpeedUnit() {
     return networkSpeedUnit;
+  }
+
+  /**
+   * Returns the selected cpu colour for charts.
+   *
+   * @return the value.
+   */
+  public String getColorCpu() {
+    return colorCpu;
+  }
+
+  /**
+   * Returns the selected gpu colour for charts.
+   *
+   * @return the value.
+   */
+  public String getColorGpu() {
+    return colorGpu;
+  }
+
+  /**
+   * Returns the selected vram colour for charts.
+   *
+   * @return the value.
+   */
+  public String getColorVram() {
+    return colorVram;
+  }
+
+  /**
+   * Returns the selected nvme colour for charts.
+   *
+   * @return the value.
+   */
+  public String getColorNvme() {
+    return colorNvme;
+  }
+
+  /**
+   * Returns the selected sata colour for charts.
+   *
+   * @return the value.
+   */
+  public String getColorSata() {
+    return colorSata;
+  }
+
+  /**
+   * Returns the selected memory used for charts.
+   *
+   * @return the value.
+   */
+  public String getColorMemoryUsed() {
+    return colorMemoryUsed;
+  }
+
+  /**
+   * Returns the selected swap used for charts.
+   *
+   * @return the value.
+   */
+  public String getColorSwapUsed() {
+    return colorSwapUsed;
+  }
+
+  /**
+   * Returns the selected cpu clock colours for charts.
+   *
+   * @return the value.
+   */
+  public List<String> getColorCpuClocks() {
+    return colorCpuClocks;
   }
 }

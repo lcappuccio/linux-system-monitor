@@ -31,20 +31,22 @@ public class PollerService {
   private final List<Collector<?>> defaultCollectors;
   private final List<Collector<?>> filesystemCollectors;
   private final List<Collector<?>> diskTempCollectors;
+  private final java.util.function.Function<Long, String> networkFormatter;
 
   /**
    * Creates a new PollerService with the given configuration and UI components.
    *
-   * @param config the application configuration
-   * @param rows the observable list of metric rows to update
-   * @param defaultCollectors collectors polled at default interval (2s)
+   * @param config               the application configuration
+   * @param rows                 the observable list of metric rows to update
+   * @param defaultCollectors    collectors polled at default interval (2s)
    * @param filesystemCollectors collectors polled at filesystem interval (60s)
-   * @param diskTempCollectors collectors polled at disk temperature interval (15s)
+   * @param diskTempCollectors   collectors polled at disk temperature interval (15s)
    */
   public PollerService(AppConfig config, ObservableList<MetricRow> rows,
       List<Collector<?>> defaultCollectors, List<Collector<?>> filesystemCollectors,
       List<Collector<?>> diskTempCollectors) {
     this.config = config;
+    this.networkFormatter = buildNetworkFormatter(config.getNetworkSpeedUnit());
     this.executor = Executors.newScheduledThreadPool(3);
     this.rows = rows;
     this.rowMap = buildRowMap(rows);
@@ -86,34 +88,13 @@ public class PollerService {
    * </ul>
    */
   public void start() {
-    long defaultInterval = getPollInterval(config());
-    long filesystemInterval = getFilesystemInterval(config());
-    long diskTempInterval = getDiskTempInterval(config());
-
-    executor.scheduleAtFixedRate(this::runDefaultCollectors, 0, defaultInterval,
-        TimeUnit.SECONDS);
-    executor.scheduleAtFixedRate(this::runFilesystemCollectors, 0, filesystemInterval,
-        TimeUnit.SECONDS);
-    executor.scheduleAtFixedRate(this::runDiskTempCollectors, 0, diskTempInterval,
-        TimeUnit.SECONDS);
-
+    executor.scheduleAtFixedRate(this::runDefaultCollectors, 0,
+        config.getPollIntervalDefault(), TimeUnit.SECONDS);
+    executor.scheduleAtFixedRate(this::runFilesystemCollectors, 0,
+        config.getPollIntervalFilesystem(), TimeUnit.SECONDS);
+    executor.scheduleAtFixedRate(this::runDiskTempCollectors, 0,
+        config.getPollIntervalDiskTemp(), TimeUnit.SECONDS);
     LOG.info("PollerService started");
-  }
-
-  private AppConfig config() {
-    return AppConfig.load();
-  }
-
-  private long getPollInterval(AppConfig config) {
-    return config.getPollIntervalDefault();
-  }
-
-  private long getFilesystemInterval(AppConfig config) {
-    return config.getPollIntervalFilesystem();
-  }
-
-  private long getDiskTempInterval(AppConfig config) {
-    return config.getPollIntervalDiskTemp();
   }
 
   private void runDefaultCollectors() {
@@ -149,9 +130,9 @@ public class PollerService {
   private void updateRows(String section, Object metrics) {
     if (metrics instanceof org.lcappuccio.systemmonitor.model.MemoryMetrics mem) {
       Platform.runLater(() -> {
-        setIfPresent("Memory.Used", formatBytesGpu(mem.memUsedBytes()));
-        setIfPresent("Memory.Total", formatBytesGpu(mem.memTotalBytes()));
-        setIfPresent("Memory.Swap Used", formatBytesGpu(mem.swapUsedBytes()));
+        setIfPresent("Memory.Used", formatBytesMemory(mem.memUsedBytes()) + " / "
+            + formatBytesMemory(mem.memTotalBytes()));
+        setIfPresent("Memory.Swap Used", formatBytesMemory(mem.swapUsedBytes()));
       });
     } else if (metrics instanceof org.lcappuccio.systemmonitor.model.NetworkMetrics net) {
       Platform.runLater(() -> {
@@ -185,8 +166,8 @@ public class PollerService {
         }
         setIfPresent("GPU.Temperature", tempStr);
         setIfPresent("GPU.Load", String.format("%.0f%%", gpu.loadPercent()));
-        String vramUsedStr = formatBytesGpu(gpu.vramUsedBytes());
-        String vramTotalStr = formatBytesGpu(gpu.vramTotalBytes());
+        String vramUsedStr = formatBytesMemory(gpu.vramUsedBytes());
+        String vramTotalStr = formatBytesMemory(gpu.vramTotalBytes());
         setIfPresent("GPU.VRAM Used", vramUsedStr + " / " + vramTotalStr);
         String vramTempStr;
         if (Double.isNaN(gpu.vramTemperatureCelsius())) {
@@ -230,8 +211,8 @@ public class PollerService {
     }
   }
 
-  private String formatBytesGpu(long bytes) {
-    return String.format("%.2f GB", (bytes / (1024.0 * 1024 * 1024)));
+  private String formatBytesMemory(long bytes) {
+    return String.format("%d GB", Math.round(bytes / (1024.0 * 1024 * 1024)));
   }
 
   private String formatBytesFileSystem(long bytes) {
@@ -251,6 +232,18 @@ public class PollerService {
       case ("Mbps") -> String.format("%.0f Mbps", bytes * 8 / (1024.0 * 1024));
       case ("Gbps") -> String.format("%.0f Gbps", bytes * 8 / (1024.0 * 1024 * 1024));
       default -> String.format("%.0f Kbps", bytes * 8 / 1024.0);
+    };
+  }
+
+  private static java.util.function.Function<Long, String> buildNetworkFormatter(
+      String unit) {
+    return switch (unit) {
+      case "KBps" -> bytes -> String.format("%.0f KB/s", bytes / 1024.0);
+      case "MBps" -> bytes -> String.format("%.0f MB/s", bytes / (1024.0 * 1024));
+      case "GBps" -> bytes -> String.format("%.0f GB/s", bytes / (1024.0 * 1024 * 1024));
+      case "Mbps" -> bytes -> String.format("%.0f Mbps", bytes * 8 / (1024.0 * 1024));
+      case "Gbps" -> bytes -> String.format("%.0f Gbps", bytes * 8 / (1024.0 * 1024 * 1024));
+      default -> bytes -> String.format("%.0f Kbps", bytes * 8 / 1024.0);
     };
   }
 

@@ -1,6 +1,7 @@
 package org.lcappuccio.systemmonitor.collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -43,7 +44,7 @@ class FileSystemCollectorTest {
     FileSystemMetrics metrics = metricsOpt.get();
     assertNotNull(metrics.usage());
 
-    assertTrue(metrics.usage().size() > 0);
+    assertFalse(metrics.usage().isEmpty());
 
     for (var entry : metrics.usage().entrySet()) {
       String mount = entry.getKey();
