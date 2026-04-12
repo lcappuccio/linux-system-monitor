@@ -1,9 +1,8 @@
 package org.lcappuccio.systemmonitor.collectors;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.nio.file.FileStore;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Collects filesystem metrics using java.nio.file.FileStore.
+ * Collects filesystem metrics using the df command.
  */
 public class FileSystemCollector implements Collector<FileSystemMetrics> {
 
@@ -55,14 +54,12 @@ public class FileSystemCollector implements Collector<FileSystemMetrics> {
 
   private boolean isMountValid(String mountPoint) {
     try {
-      Path path = Path.of(mountPoint);
-      if (!Files.exists(path)) {
-        LOG.warn("Mount point does not exist: {}", mountPoint);
-        return false;
-      }
-      FileStore store = Files.getFileStore(path);
-      return store != null;
-    } catch (IOException | SecurityException e) {
+      ProcessBuilder pb = new ProcessBuilder("df", mountPoint);
+      pb.redirectErrorStream(true);
+      Process process = pb.start();
+      int exitCode = process.waitFor();
+      return exitCode == 0;
+    } catch (IOException | InterruptedException e) {
       LOG.error("Cannot access mount point {}: {}", mountPoint, e.getMessage());
       return false;
     }
@@ -79,18 +76,11 @@ public class FileSystemCollector implements Collector<FileSystemMetrics> {
 
       for (String mountPoint : mountPoints) {
         try {
-          Path path = Path.of(mountPoint);
-          if (!Files.exists(path)) {
-            continue;
+          var usage = getUsageForMount(mountPoint);
+          if (usage != null) {
+            usageMap.put(mountPoint, usage);
           }
-
-          FileStore store = Files.getFileStore(path);
-          long total = store.getTotalSpace();
-          long free = store.getUsableSpace();
-          long used = total - free;
-
-          usageMap.put(mountPoint, new FileSystemMetrics.FileSystemUsage(used, free, total));
-        } catch (IOException e) {
+        } catch (Exception e) {
           LOG.error("Failed to read mount point {}: {}", mountPoint, e.getMessage());
         }
       }
@@ -103,6 +93,37 @@ public class FileSystemCollector implements Collector<FileSystemMetrics> {
     } catch (Exception e) {
       LOG.error("Failed to collect filesystem metrics: {}", e.getMessage());
       return Optional.empty();
+    }
+  }
+
+  private FileSystemMetrics.FileSystemUsage getUsageForMount(String mountPoint) throws IOException {
+    ProcessBuilder pb = new ProcessBuilder("df", "-B1", mountPoint);
+    pb.redirectErrorStream(true);
+    Process process = pb.start();
+
+    try (BufferedReader reader = new BufferedReader(
+        new InputStreamReader(process.getInputStream()))) {
+      String line;
+      // Skip header line
+      reader.readLine();
+      line = reader.readLine();
+
+      if (line == null) {
+        return null;
+      }
+
+      // df --block-size=1 output: Filesystem 1B-blocks Used Available Use% Mounted on
+      String[] parts = line.trim().split("\\s+");
+      if (parts.length < 4) {
+        return null;
+      }
+
+      // parts: [0]=Filesystem, [1]=1B-blocks, [2]=Used, [3]=Available, [4]=Use%, [5]=Mounted
+      long total = Long.parseLong(parts[1]);
+      long used = Long.parseLong(parts[2]);
+      long free = Long.parseLong(parts[3]);
+
+      return new FileSystemMetrics.FileSystemUsage(used, free, total);
     }
   }
 

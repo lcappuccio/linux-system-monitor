@@ -61,7 +61,7 @@ class FileSystemCollectorTest {
   }
 
   @Test
-  void collect_usedPlusFreeEqualsTotal() {
+  void collect_valuesAreReasonable() {
     collector.initialize();
     var metricsOpt = collector.collect();
     assertTrue(metricsOpt.isPresent());
@@ -70,9 +70,10 @@ class FileSystemCollectorTest {
 
     for (var entry : metrics.usage().entrySet()) {
       FileSystemMetrics.FileSystemUsage usage = entry.getValue();
-      assertEquals(usage.totalBytes(),
-          usage.usedBytes() + usage.freeBytes(),
-          "Used + Free should equal Total for " + entry.getKey());
+      // free + used may not equal total due to reserved blocks (df behavior)
+      assertTrue(usage.usedBytes() + usage.freeBytes() <= usage.totalBytes(),
+          "Used + Free should be <= Total for " + entry.getKey());
+      assertTrue(usage.totalBytes() > 0, "Total should be > 0 for " + entry.getKey());
     }
   }
 

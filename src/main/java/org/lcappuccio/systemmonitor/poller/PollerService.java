@@ -156,9 +156,10 @@ public class PollerService {
         for (var entry : fs.usage().entrySet()) {
           String mount = entry.getKey();
           var usage = entry.getValue();
-          String value = formatBytes(usage.usedBytes()) + " / "
-              + formatBytes(usage.totalBytes());
-          setIfPresent("Filesystems." + mount, value);
+          String usedStr = formatBytesWhole(usage.usedBytes());
+          String freeStr = formatBytesWhole(usage.freeBytes());
+          String totalStr = formatBytesWhole(usage.totalBytes());
+          setIfPresent("Filesystems." + mount, usedStr + " / " + freeStr + " / " + totalStr);
         }
       });
     }
@@ -180,6 +181,18 @@ public class PollerService {
       return String.format("%.1f MB", bytes / (1024.0 * 1024));
     } else {
       return String.format("%.2f GB", bytes / (1024.0 * 1024 * 1024));
+    }
+  }
+
+  private String formatBytesWhole(long bytes) {
+    if (bytes < 1024) {
+      return bytes + " B";
+    } else if (bytes < 1024 * 1024) {
+      return (bytes / 1024) + " KB";
+    } else if (bytes < 1024 * 1024 * 1024) {
+      return (bytes / (1024 * 1024)) + " MB";
+    } else {
+      return Math.round(bytes / (1024.0 * 1024 * 1024)) + " GB";
     }
   }
 
