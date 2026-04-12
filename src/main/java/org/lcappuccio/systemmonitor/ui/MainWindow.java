@@ -134,8 +134,8 @@ public class MainWindow {
     rows.add(new MetricRow("CPU", "Temperature", "—"));
     rows.add(new MetricRow("CPU", "Load", "—"));
 
-    for (int coreId : coreIds) {
-      rows.add(new MetricRow("CPU", "Core " + coreId, "—"));
+    for (int i = 0; i < coreIds.size(); i++) {
+      rows.add(new MetricRow("CPU", "Core " + i, "—"));
     }
 
     rows.addAll(
