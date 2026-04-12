@@ -59,10 +59,8 @@ class NetworkCollectorTest {
       assertTrue(metricsOpt.isPresent());
 
       NetworkMetrics metrics = metricsOpt.get();
-      assertTrue(metrics.downloadBytesPerSec() == 0,
-          "First call should return 0 for download rate");
-      assertTrue(metrics.uploadBytesPerSec() == 0,
-          "First call should return 0 for upload rate");
+      assertEquals(0, metrics.downloadBytesPerSec(), "First call should return 0 for download rate");
+      assertEquals(0, metrics.uploadBytesPerSec(), "First call should return 0 for upload rate");
     }
   }
 
