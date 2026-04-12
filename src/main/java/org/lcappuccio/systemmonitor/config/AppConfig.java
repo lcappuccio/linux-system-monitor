@@ -167,9 +167,11 @@ public final class AppConfig {
   }
 
   /**
-   * Returns the selected network speed for charts
+   * Returns the selected network speed for charts.
    *
    * @return network metric to be used in network chart
    */
-  public String getNetworkSpeedUnit() {return networkSpeedUnit;}
+  public String getNetworkSpeedUnit() {
+    return networkSpeedUnit;
+  }
 }
