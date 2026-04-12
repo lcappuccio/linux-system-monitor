@@ -51,7 +51,7 @@ public class MainWindow {
 
     populateRows(config);
 
-    chartPanel = new ChartPanel(rows);
+    chartPanel = new ChartPanel(rows, config);
 
     TableView<MetricRow> table = buildTable();
 
@@ -128,13 +128,6 @@ public class MainWindow {
 
     table.setPlaceholder(new javafx.scene.control.Label("No data available"));
 
-    table.getSelectionModel().selectedItemProperty().addListener(
-        (obs, oldRow, newRow) -> {
-          if (newRow != null) {
-            chartPanel.toggle(newRow);
-          }
-        }
-    );
     return table;
   }
 

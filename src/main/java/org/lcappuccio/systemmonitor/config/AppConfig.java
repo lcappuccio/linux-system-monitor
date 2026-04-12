@@ -38,6 +38,15 @@ public final class AppConfig {
   private final int pollIntervalFilesystem;
   private final int pollIntervalDiskTemp;
 
+  private final String colorCpu;
+  private final String colorGpu;
+  private final String colorVram;
+  private final String colorNvme;
+  private final String colorSata;
+  private final String colorMemoryUsed;
+  private final String colorSwapUsed;
+  private final List<String> colorCpuClocks;
+
   private AppConfig(Properties props) {
     this.netInterface = props.getProperty("net.interface");
     this.gpuDrmPath = props.getProperty("gpu.drm.path");
@@ -47,6 +56,14 @@ public final class AppConfig {
     this.pollIntervalDefault = parseInt(props, "poll.interval.default", 2);
     this.pollIntervalFilesystem = parseInt(props, "poll.interval.filesystem", 60);
     this.pollIntervalDiskTemp = parseInt(props, "poll.interval.disk.temp", 15);
+    this.colorCpu = props.getProperty("chart.color.cpu");
+    this.colorGpu = props.getProperty("chart.color.gpu");
+    this.colorVram = props.getProperty("chart.color.vram");
+    this.colorNvme = props.getProperty("chart.color.nvme");
+    this.colorSata = props.getProperty("chart.color.sata");
+    this.colorMemoryUsed = props.getProperty("chart.color.memory.used");
+    this.colorSwapUsed = props.getProperty("chart.color.swap.used");
+    this.colorCpuClocks = Arrays.asList(props.getProperty("chart.color.cpu.clocks").split(","));
   }
 
   /**
@@ -173,5 +190,77 @@ public final class AppConfig {
    */
   public String getNetworkSpeedUnit() {
     return networkSpeedUnit;
+  }
+
+  /**
+   * Returns the selected cpu colour for charts
+   *
+   * @return
+   */
+  public String getColorCpu() {
+    return colorCpu;
+  }
+
+  /**
+   * Returns the selected gpu colour for charts
+   *
+   * @return
+   */
+  public String getColorGpu() {
+    return colorGpu;
+  }
+
+  /**
+   * Returns the selected vram colour for charts
+   *
+   * @return
+   */
+  public String getColorVram() {
+    return colorVram;
+  }
+
+  /**
+   * Returns the selected nvme colour for charts
+   *
+   * @return
+   */
+  public String getColorNvme() {
+    return colorNvme;
+  }
+
+  /**
+   * Returns the selected sata colour for charts
+   *
+   * @return
+   */
+  public String getColorSata() {
+    return colorSata;
+  }
+
+  /**
+   * Returns the selected memory used for charts
+   *
+   * @return
+   */
+  public String getColorMemoryUsed() {
+    return colorMemoryUsed;
+  }
+
+  /**
+   * Returns the selected swap used for charts
+   *
+   * @return
+   */
+  public String getColorSwapUsed() {
+    return colorSwapUsed;
+  }
+
+  /**
+   * Returns the selected cpu clock colours for charts.
+   *
+   * @return
+   */
+  public List<String> getColorCpuClocks() {
+    return colorCpuClocks;
   }
 }

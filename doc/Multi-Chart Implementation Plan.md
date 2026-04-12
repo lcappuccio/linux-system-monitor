@@ -107,7 +107,7 @@ List<ChartGroup> groups = List.of(
     new ChartGroup(
         "Memory (GB)",
         List.of("Memory.Used", "Memory.Swap Used"),
-        List.of("#0A6FC2", "#9C27B0"),
+        List.of("#2EB82E", "#FFCCFF"),
         List.of("RAM", "Swap")
     ),
     new ChartGroup(
