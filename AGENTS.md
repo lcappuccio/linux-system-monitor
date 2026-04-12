@@ -24,16 +24,16 @@ org.lcappuccio.systemmonitor
 ├── ui/
 │   ├── MainWindow.java        # SplitPane: left TableView + right chart panel
 │   ├── MetricRow.java         # JavaFX observable model for a single metric
-│   └── ChartPanel.java        # Live LineChart for selected metrics (TODO)
+│   └── ChartPanel.java        # Live LineChart for selected metrics
 ├── collectors/
-│   ├── CpuCollector.java      # stub (TODO: /proc/stat, /sys/.../cpufreq, hwmon k10temp)
-│   ├── MemoryCollector.java   # DONE: /proc/meminfo parsing
-│   ├── GpuCollector.java      # stub (TODO: sysfs + hwmon amdgpu)
-│   ├── DiskCollector.java     # stub (TODO: hwmon nvme, smartctl)
-│   ├── FileSystemCollector.java  # DONE: df command for accurate values
-│   └── NetworkCollector.java  # stub (TODO: /proc/net/dev, sysfs)
-├── poller/
-│   └── PollerService.java     # DONE: ScheduledExecutorService, Platform.runLater()
+│   ├── CpuCollector.java      # /proc/stat, /sys/.../cpufreq, hwmon (k10temp)
+│   ├── MemCollector.java      # /proc/meminfo
+│   ├── GpuCollector.java      # /sys/class/drm/card1/..., hwmon (amdgpu)
+│   ├── DiskCollector.java     # hwmon (nvme), sudo smartctl (sata)
+│   ├── FsCollector.java       # java.nio.file.FileStore
+│   └── NetCollector.java      # /proc/net/dev, /sys/class/net/enp9s0/...
+└── poller/
+    └── PollerService.java     # ScheduledExecutorService, Platform.runLater()
 ```
 
 ## Configuration
@@ -77,9 +77,6 @@ mvn javafx:run
 # Run tests
 mvn test
 
-# Checkstyle
-mvn checkstyle:check 
-
 # Code quality
 mvn checkstyle:check sonar:sonar -Psonar
 ```
@@ -91,7 +88,6 @@ mvn checkstyle:check sonar:sonar -Psonar
 - Do not block the JavaFX Application Thread.
 - Do not add dependencies without discussing first.
 - Do not target Windows or macOS.
-- Do not commit changes to build.yml unless with explicit approval.
 
 ## Strict Prohibitions
 
@@ -121,11 +117,3 @@ Implementations may import freely; interfaces may not.
 **No mutable result objects.** Collector output must be immutable records
 (`CpuMetrics`, `GpuMetrics`, `MemoryMetrics`, `DiskMetrics`, `FileSystemMetrics`, `NetworkMetrics`).
 Do not pass mutable containers or shared state between the poller and the UI.
-
-**No resource leaks.** All streams, readers, and processes must use try-with-resources.
-Process instances must be explicitly destroyed (`process.destroyForcibly()`) in a `finally` block.
-Never use plain `try {}` blocks for I/O operations.
-
-**No catching generic Exception.** Always catch specific exception types
-(IOException, NumberFormatException, InterruptedException, etc.).
-Never catch Exception or RuntimeException.

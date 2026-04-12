@@ -39,6 +39,7 @@ public class MainWindow {
   private final SplitPane root;
   private final ObservableList<MetricRow> rows;
   private final PollerService pollerService;
+  private final ChartPanel chartPanel;
 
   /**
    * Constructs the main window with the given application configuration.
@@ -46,17 +47,18 @@ public class MainWindow {
    * @param config the loaded application configuration
    */
   public MainWindow(AppConfig config) {
-    LOG.debug("Building main window");
+    LOG.info("Building main window");
     this.rows = FXCollections.observableArrayList();
 
-    TableView<MetricRow> table = buildTable();
-    StackPane chartPlaceholder = buildChartPlaceholder();
+    populateRows(config);
 
-    root = new SplitPane(table, chartPlaceholder);
+    chartPanel = new ChartPanel(rows);
+
+    TableView<MetricRow> table = buildTable();
+
+    root = new SplitPane(table, chartPanel.getRoot());
     root.setOrientation(Orientation.HORIZONTAL);
     root.setDividerPositions(DIVIDER_POSITION);
-
-    populateRows(config);
 
     this.pollerService = createPollerService(config);
     this.pollerService.start();
@@ -98,6 +100,9 @@ public class MainWindow {
     if (pollerService != null) {
       pollerService.shutdown();
     }
+    if (chartPanel != null) {
+      chartPanel.shutdown();
+    }
   }
 
   private TableView<MetricRow> buildTable() {
@@ -119,13 +124,15 @@ public class MainWindow {
     table.getColumns().addAll(sectionCol, metricCol, valueCol);
     table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     table.setPlaceholder(new javafx.scene.control.Label("No data available"));
-    return table;
-  }
 
-  private StackPane buildChartPlaceholder() {
-    var label = new javafx.scene.control.Label("Charts — select a metric from the table");
-    var pane = new StackPane(label);
-    return pane;
+    table.getSelectionModel().selectedItemProperty().addListener(
+        (obs, oldRow, newRow) -> {
+          if (newRow != null) {
+            chartPanel.toggle(newRow);
+          }
+        }
+    );
+    return table;
   }
 
   private void populateRows(AppConfig config) {
