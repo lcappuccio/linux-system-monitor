@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.lcappuccio.systemmonitor.config.AppConfig;
 import org.lcappuccio.systemmonitor.model.FileSystemMetrics;
 import org.slf4j.Logger;
