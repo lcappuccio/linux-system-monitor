@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 public class MainWindow {
 
   private static final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
-  private static final double DIVIDER_POSITION = 0.4;
+  private static final double DIVIDER_POSITION = 0.30;
 
   private final SplitPane root;
   private final ObservableList<MetricRow> rows;
