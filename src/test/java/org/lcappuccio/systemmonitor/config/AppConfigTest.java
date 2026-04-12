@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.util.Properties;
+
 import org.junit.jupiter.api.Test;
 
 class AppConfigTest {
@@ -79,5 +81,17 @@ class AppConfigTest {
     assertEquals("#0F488A", cpuClocks.get(2));
     // Test that it parses the comma-separated string correctly
     assertEquals(16, cpuClocks.size());
+  }
+
+  @Test
+  void historySize_returnsExpectedValue() {
+    AppConfig config = AppConfig.load();
+    assertEquals(30, config.getHistorySize());
+  }
+
+  @Test
+  void tickSeconds_returnsExpectedValue() {
+    AppConfig config = AppConfig.load();
+    assertEquals(2, config.getTickSeconds());
   }
 }

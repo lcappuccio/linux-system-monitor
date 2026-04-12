@@ -27,23 +27,24 @@ import org.slf4j.LoggerFactory;
  * which metric is selected in the table. The left table has no interaction with this panel.
  *
  * <p>History is maintained via an internal {@link Timeline} tick at 2-second intervals.
- * On each tick, the last known value for every tracked metric is appended to its deque, ensuring uniform history growth
- * regardless of collector polling interval.
+ * On each tick, the last known value for every tracked metric is appended to its deque,
+ * ensuring uniform history growth regardless of collector polling interval.
  *
  * <p>Value changes are captured via JavaFX {@code ChangeListener} on each row's
- * {@code valueProperty()}. Conversion is delegated to {@link MetricValueParser}. This class has no knowledge of
- * {@code PollerService} or any collector.
+ * {@code valueProperty()}. Conversion is delegated to {@link MetricValueParser}.
+ * This class has no knowledge of {@code PollerService} or any collector.
  */
 public class ChartPanel {
 
   private static final Logger LOG = LoggerFactory.getLogger(ChartPanel.class);
 
-  /**
-   * Rolling window: 5 minutes at 2-second tick interval.
-   */
-  private static final int HISTORY_SIZE = 150;
-  private static final double TICK_SECONDS = 2.0;
   private static final int CHART_MIN_HEIGHT = 150;
+
+  /**
+   * Rolling window.
+   */
+  private final int historySize;
+  private final double tickSeconds;
 
   private final VBox root;
   private final Map<String, ArrayDeque<Double>> history;
@@ -63,8 +64,8 @@ public class ChartPanel {
   /**
    * Constructs a {@code ChartPanel}, builds all chart groups, and subscribes to all rows.
    *
-   * @param rows      the observable list of metric rows to monitor
-   * @param appConfig
+   * @param rows the observable list of metric rows to monitor
+   * @param appConfig the configuration object
    */
   public ChartPanel(ObservableList<MetricRow> rows, AppConfig appConfig) {
     this.history = new HashMap<>();
@@ -72,6 +73,9 @@ public class ChartPanel {
     this.seriesMap = new HashMap<>();
     this.root = new VBox(4);
     this.root.setPadding(new Insets(4));
+
+    this.historySize = appConfig.getHistorySize();
+    this.tickSeconds = appConfig.getTickSeconds();
     this.timeline = buildTimeline();
 
     this.colorCpu = appConfig.getColorCpu();
@@ -96,7 +100,8 @@ public class ChartPanel {
   }
 
   /**
-   * Returns the root {@link VBox} to embed in the main window's {@link javafx.scene.control.SplitPane}.
+   * Returns the root {@link VBox} to embed in the main window's
+   * {@link javafx.scene.control.SplitPane}.
    *
    * @return the root pane
    */
@@ -165,14 +170,6 @@ public class ChartPanel {
     NumberAxis axisY = new NumberAxis();
     axisY.setAutoRanging(true);
 
-    // Fix Load chart Y axis to 0-100
-    if (group.title().startsWith("Load")) {
-      axisY.setAutoRanging(false);
-      axisY.setLowerBound(0);
-      axisY.setUpperBound(100);
-      axisY.setTickUnit(25);
-    }
-
     LineChart<Number, Number> chart = new LineChart<>(axisX, axisY);
     chart.setTitle(group.title());
     chart.setAnimated(false);
@@ -196,7 +193,7 @@ public class ChartPanel {
   private void subscribeToRows(ObservableList<MetricRow> rows) {
     for (MetricRow row : rows) {
       String key = row.getSection() + "." + row.getMetric();
-      history.put(key, new ArrayDeque<>(HISTORY_SIZE));
+      history.put(key, new ArrayDeque<>(historySize));
       row.valueProperty().addListener((obs, oldVal, newVal) ->
           MetricValueParser.parse(newVal).ifPresent(v -> lastKnownValue.put(key, v))
       );
@@ -206,7 +203,7 @@ public class ChartPanel {
 
   private Timeline buildTimeline() {
     Timeline timeline = new Timeline(new KeyFrame(
-        Duration.seconds(TICK_SECONDS),
+        Duration.seconds(tickSeconds),
         e -> onTick()
     ));
     timeline.setCycleCount(Animation.INDEFINITE);
@@ -223,17 +220,18 @@ public class ChartPanel {
         continue;
       }
 
-      if (deque.size() >= HISTORY_SIZE) {
+      if (deque.size() >= historySize) {
         deque.pollFirst();
       }
       deque.addLast(value);
 
       XYChart.Series<Number, Number> series = seriesMap.get(key);
       if (series != null) {
-        boolean atCapacity = series.getData().size() >= HISTORY_SIZE;
+        boolean atCapacity = series.getData().size() >= historySize;
+        //series.getNode().setStyle("-fx-stroke: #000000; -fx-stroke-width: 1px;");
         series.getData().add(new XYChart.Data<>(series.getData().size(), value));
         if (atCapacity) {
-          series.getData().remove(0);
+          series.getData().removeFirst();
           for (int i = 0; i < series.getData().size(); i++) {
             series.getData().get(i).setXValue(i);
           }
