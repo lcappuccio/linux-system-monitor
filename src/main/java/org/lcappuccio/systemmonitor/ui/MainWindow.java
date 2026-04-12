@@ -66,14 +66,14 @@ public class MainWindow {
     List<Collector<?>> defaultCollectors = new ArrayList<>();
     defaultCollectors.add(new CpuCollector());
     defaultCollectors.add(new MemoryCollector());
-    defaultCollectors.add(new GpuCollector());
-    defaultCollectors.add(new NetworkCollector());
+    defaultCollectors.add(new GpuCollector(config));
+    defaultCollectors.add(new NetworkCollector(config));
 
     List<Collector<?>> filesystemCollectors = new ArrayList<>();
     filesystemCollectors.add(new FileSystemCollector(config));
 
     List<Collector<?>> diskTempCollectors = new ArrayList<>();
-    diskTempCollectors.add(new DiskCollector());
+    diskTempCollectors.add(new DiskCollector(config));
 
     return new PollerService(config, rows, defaultCollectors, filesystemCollectors,
         diskTempCollectors);
@@ -129,18 +129,16 @@ public class MainWindow {
   }
 
   private void populateRows(AppConfig config) {
+    List<Integer> coreIds = discoverCpuCores();
+
+    rows.add(new MetricRow("CPU", "Temperature", "—"));
+    rows.add(new MetricRow("CPU", "Load", "—"));
+
+    for (int i = 0; i < coreIds.size(); i++) {
+      rows.add(new MetricRow("CPU", "Core " + i, "—"));
+    }
+
     rows.addAll(
-        // CPU
-        new MetricRow("CPU", "Temperature", "—"),
-        new MetricRow("CPU", "Load", "—"),
-        new MetricRow("CPU", "Core 0 Freq", "—"),
-        new MetricRow("CPU", "Core 1 Freq", "—"),
-        new MetricRow("CPU", "Core 2 Freq", "—"),
-        new MetricRow("CPU", "Core 3 Freq", "—"),
-        new MetricRow("CPU", "Core 4 Freq", "—"),
-        new MetricRow("CPU", "Core 5 Freq", "—"),
-        new MetricRow("CPU", "Core 6 Freq", "—"),
-        new MetricRow("CPU", "Core 7 Freq", "—"),
         // Memory
         new MetricRow("Memory", "Used", "—"),
         new MetricRow("Memory", "Swap Used", "—"),
@@ -151,6 +149,7 @@ public class MainWindow {
         new MetricRow("GPU", "VRAM Temperature", "—"),
         new MetricRow("GPU", "VRAM Load", "—"),
         new MetricRow("GPU", "Power", "—"),
+        new MetricRow("GPU", "Fan", "—"),
         // Disks
         new MetricRow("Disks", "NVMe Temperature", "—"),
         new MetricRow("Disks", "SSD Temperature", "—")
@@ -168,5 +167,11 @@ public class MainWindow {
         new MetricRow("Network", "Upload", "—"),
         new MetricRow("Network", "Download", "—")
     );
+  }
+
+  private List<Integer> discoverCpuCores() {
+    CpuCollector tempCollector = new CpuCollector();
+    tempCollector.initialize();
+    return tempCollector.getCoreIds();
   }
 }

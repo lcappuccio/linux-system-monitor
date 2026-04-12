@@ -121,3 +121,11 @@ Implementations may import freely; interfaces may not.
 **No mutable result objects.** Collector output must be immutable records
 (`CpuMetrics`, `GpuMetrics`, `MemoryMetrics`, `DiskMetrics`, `FileSystemMetrics`, `NetworkMetrics`).
 Do not pass mutable containers or shared state between the poller and the UI.
+
+**No resource leaks.** All streams, readers, and processes must use try-with-resources.
+Process instances must be explicitly destroyed (`process.destroyForcibly()`) in a `finally` block.
+Never use plain `try {}` blocks for I/O operations.
+
+**No catching generic Exception.** Always catch specific exception types
+(IOException, NumberFormatException, InterruptedException, etc.).
+Never catch Exception or RuntimeException.

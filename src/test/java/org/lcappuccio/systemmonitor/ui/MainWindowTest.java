@@ -38,7 +38,7 @@ class MainWindowTest {
   void getRoot_doesNotThrow() {
     AppConfig config = AppConfig.load();
     MainWindow window = new MainWindow(config);
-    assertDoesNotThrow(() -> window.getRoot());
+    assertDoesNotThrow(window::getRoot);
   }
 
   @Test

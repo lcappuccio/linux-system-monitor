@@ -118,7 +118,7 @@ public class PollerService {
     for (Collector<?> collector : defaultCollectors) {
       try {
         collector.collect().ifPresent(metrics -> updateRows(collector.getName(), metrics));
-      } catch (Exception e) {
+      } catch (RuntimeException e) {
         LOG.error("Error collecting {}: {}", collector.getName(), e.getMessage());
       }
     }
@@ -128,7 +128,7 @@ public class PollerService {
     for (Collector<?> collector : filesystemCollectors) {
       try {
         collector.collect().ifPresent(metrics -> updateRows(collector.getName(), metrics));
-      } catch (Exception e) {
+      } catch (RuntimeException e) {
         LOG.error("Error collecting {}: {}", collector.getName(), e.getMessage());
       }
     }
@@ -138,7 +138,7 @@ public class PollerService {
     for (Collector<?> collector : diskTempCollectors) {
       try {
         collector.collect().ifPresent(metrics -> updateRows(collector.getName(), metrics));
-      } catch (Exception e) {
+      } catch (RuntimeException e) {
         LOG.error("Error collecting {}: {}", collector.getName(), e.getMessage());
       }
     }
@@ -151,6 +151,53 @@ public class PollerService {
         setIfPresent("Memory.Total", formatBytes(mem.memTotalBytes()));
         setIfPresent("Memory.Swap Used", formatBytes(mem.swapUsedBytes()));
       });
+    } else if (metrics instanceof org.lcappuccio.systemmonitor.model.NetworkMetrics net) {
+      Platform.runLater(() -> {
+        setIfPresent("Network.IP Address", net.ipAddress());
+        setIfPresent("Network.Link Speed", net.linkSpeedMbps() + " Mbps");
+        setIfPresent("Network.Upload", formatBytesPerSec(net.uploadBytesPerSec()));
+        setIfPresent("Network.Download", formatBytesPerSec(net.downloadBytesPerSec()));
+      });
+    } else if (metrics instanceof org.lcappuccio.systemmonitor.model.CpuMetrics cpu) {
+      Platform.runLater(() -> {
+        String tempStr;
+        if (Double.isNaN(cpu.temperatureCelsius())) {
+          tempStr = "N/A";
+        } else {
+          tempStr = String.format("%.1f°C", cpu.temperatureCelsius());
+        }
+        setIfPresent("CPU.Temperature", tempStr);
+        setIfPresent("CPU.Load", String.format("%.1f%%", cpu.loadPercent()));
+        for (int i = 0; i < cpu.coreFrequenciesGhz().size(); i++) {
+          double ghz = cpu.coreFrequenciesGhz().get(i);
+          setIfPresent("CPU.Core " + i, String.format("%.2f GHz", ghz));
+        }
+      });
+    } else if (metrics instanceof org.lcappuccio.systemmonitor.model.GpuMetrics gpu) {
+      Platform.runLater(() -> {
+        String tempStr;
+        if (Double.isNaN(gpu.temperatureCelsius())) {
+          tempStr = "N/A";
+        } else {
+          tempStr = String.format("%.1f°C", gpu.temperatureCelsius());
+        }
+        setIfPresent("GPU.Temperature", tempStr);
+        setIfPresent("GPU.Load", String.format("%.0f%%", gpu.loadPercent()));
+        String vramUsedStr = formatBytes(gpu.vramUsedBytes());
+        String vramTotalStr = formatBytes(gpu.vramTotalBytes());
+        setIfPresent("GPU.VRAM Used", vramUsedStr + " / " + vramTotalStr);
+        String vramTempStr;
+        if (Double.isNaN(gpu.vramTemperatureCelsius())) {
+          vramTempStr = "N/A";
+        } else {
+          vramTempStr = String.format("%.1f°C", gpu.vramTemperatureCelsius());
+        }
+        setIfPresent("GPU.VRAM Temperature", vramTempStr);
+        setIfPresent("GPU.VRAM Load", String.format("%.0f%%", gpu.vramLoadPercent()));
+        setIfPresent("GPU.Power", String.format("%.1f W", gpu.powerWatts()));
+        int fanRpm = (int) gpu.fanRpm();
+        setIfPresent("GPU.Fan", fanRpm + " RPM");
+      });
     } else if (metrics instanceof org.lcappuccio.systemmonitor.model.FileSystemMetrics fs) {
       Platform.runLater(() -> {
         for (var entry : fs.usage().entrySet()) {
@@ -161,6 +208,15 @@ public class PollerService {
           String totalStr = formatBytesWhole(usage.totalBytes());
           setIfPresent("Filesystems." + mount, usedStr + " / " + freeStr + " / " + totalStr);
         }
+      });
+    } else if (metrics instanceof org.lcappuccio.systemmonitor.model.DiskMetrics disk) {
+      Platform.runLater(() -> {
+        String nvmeStr = Double.isNaN(disk.nvmeTempCelsius())
+            ? "N/A" : String.format("%.0f°C", disk.nvmeTempCelsius());
+        String sataStr = Double.isNaN(disk.sataTempCelsius())
+            ? "N/A" : String.format("%.0f°C", disk.sataTempCelsius());
+        setIfPresent("Disks.NVMe Temperature", nvmeStr);
+        setIfPresent("Disks.SSD Temperature", sataStr);
       });
     }
   }
@@ -193,6 +249,18 @@ public class PollerService {
       return (bytes / (1024 * 1024)) + " MB";
     } else {
       return Math.round(bytes / (1024.0 * 1024 * 1024)) + " GB";
+    }
+  }
+
+  private String formatBytesPerSec(long bytes) {
+    if (bytes < 1024) {
+      return bytes + " B/s";
+    } else if (bytes < 1024 * 1024) {
+      return String.format("%.1f KB/s", bytes / 1024.0);
+    } else if (bytes < 1024 * 1024 * 1024) {
+      return String.format("%.1f MB/s", bytes / (1024.0 * 1024));
+    } else {
+      return String.format("%.2f GB/s", bytes / (1024.0 * 1024 * 1024));
     }
   }
 

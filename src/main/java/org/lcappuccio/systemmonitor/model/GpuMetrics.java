@@ -10,6 +10,7 @@ package org.lcappuccio.systemmonitor.model;
  * @param vramTemperatureCelsius VRAM temperature in °C
  * @param vramLoadPercent        VRAM controller load percentage (0–100)
  * @param powerWatts             GPU power draw in watts (PPT)
+ * @param fanRpm               GPU fan speed in RPM
  */
 public record GpuMetrics(
     double temperatureCelsius,
@@ -18,7 +19,8 @@ public record GpuMetrics(
     long vramTotalBytes,
     double vramTemperatureCelsius,
     double vramLoadPercent,
-    double powerWatts
+    double powerWatts,
+    double fanRpm
 ) {
 
 }

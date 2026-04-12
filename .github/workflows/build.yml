@@ -20,13 +20,17 @@ jobs:
 
       - name: Build and test
         uses: GabrielBB/xvfb-action@v1
-        run: mvn -B clean test
+        with:
+          run: mvn -B clean test
 
       - name: Checkstyle
-        run: mvn -B checkstyle:check
+        uses: GabrielBB/xvfb-action@v1
+        with:
+          run: mvn -B checkstyle:check
 
       - name: SonarCloud
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         uses: GabrielBB/xvfb-action@v1
-        run: mvn -B sonar:sonar -Psonar
+        with:
+          run: mvn -B sonar:sonar -Psonar
