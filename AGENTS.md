@@ -24,16 +24,16 @@ org.lcappuccio.systemmonitor
 ├── ui/
 │   ├── MainWindow.java        # SplitPane: left TableView + right chart panel
 │   ├── MetricRow.java         # JavaFX observable model for a single metric
-│   └── ChartPanel.java        # Live LineChart for selected metrics
+│   └── ChartPanel.java        # Live LineChart for selected metrics (TODO)
 ├── collectors/
-│   ├── CpuCollector.java      # /proc/stat, /sys/.../cpufreq, hwmon (k10temp)
-│   ├── MemCollector.java      # /proc/meminfo
-│   ├── GpuCollector.java      # /sys/class/drm/card1/..., hwmon (amdgpu)
-│   ├── DiskCollector.java     # hwmon (nvme), sudo smartctl (sata)
-│   ├── FsCollector.java       # java.nio.file.FileStore
-│   └── NetCollector.java      # /proc/net/dev, /sys/class/net/enp9s0/...
-└── poller/
-    └── PollerService.java     # ScheduledExecutorService, Platform.runLater()
+│   ├── CpuCollector.java      # stub (TODO: /proc/stat, /sys/.../cpufreq, hwmon k10temp)
+│   ├── MemoryCollector.java   # DONE: /proc/meminfo parsing
+│   ├── GpuCollector.java      # stub (TODO: sysfs + hwmon amdgpu)
+│   ├── DiskCollector.java     # stub (TODO: hwmon nvme, smartctl)
+│   ├── FileSystemCollector.java  # DONE: df command for accurate values
+│   └── NetworkCollector.java  # stub (TODO: /proc/net/dev, sysfs)
+├── poller/
+│   └── PollerService.java     # DONE: ScheduledExecutorService, Platform.runLater()
 ```
 
 ## Configuration
