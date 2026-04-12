@@ -13,10 +13,10 @@
 - `MainWindow` owns the `ObservableList<MetricRow>` and passes it to both `ChartPanel` and
   `PollerService`.
 - Construction order is strict and intentional:
-    1. `populateRows()` — rows must exist before any subscriber attaches
-    2. `new ChartPanel(rows)` — subscribes listeners to already-populated rows
-    3. `buildTable()` — wires selection listener to `chartPanel.toggle()`
-    4. `pollerService.start()` — data starts flowing last
+  1. `populateRows()` — rows must exist before any subscriber attaches
+  2. `new ChartPanel(rows)` — subscribes listeners to already-populated rows
+  3. `buildTable()` — wires selection listener to `chartPanel.toggle()`
+  4. `pollerService.start()` — data starts flowing last
 - Filesystem rows are generated dynamically from `config.getFsMountpoints()` — no hardcoding.
 - CPU core rows are generated dynamically by running `CpuCollector.initialize()` at startup
   to discover physical core count.
@@ -38,8 +38,6 @@ results to `MetricRow` via `Platform.runLater()`.
 - Each collector is called in a try/catch — exceptions are logged, never propagated.
 - `shutdown()` calls `executor.shutdownNow()` with a 5-second graceful timeout.
 - No knowledge of `ChartPanel` — pushes only to `MetricRow`.
-- Network transfer rate metric is defined in properties to avoid having to dynamically scale/downscale chart
-when moving between MB/s, KB/s and so on.
 
 ### Display Format
 
@@ -79,15 +77,15 @@ selected metric.
 - Has **no knowledge of `PollerService`** or any collector. Its only input is
   `ObservableList<MetricRow>`.
 - Maintains two maps keyed by `section.metric`:
-    - `Map<String, ArrayDeque<Double>> history` — rolling window of 150 samples (5 minutes at 2s tick)
-    - `Map<String, Double> lastKnownValue` — last successfully parsed value per metric
+  - `Map<String, ArrayDeque<Double>> history` — rolling window of 150 samples (5 minutes at 2s tick)
+  - `Map<String, Double> lastKnownValue` — last successfully parsed value per metric
 - A `ChangeListener` on each `MetricRow.valueProperty()` calls `MetricValueParser.parse()`
   and updates `lastKnownValue` when a parseable value arrives.
 - An internal `Timeline` fires every 2 seconds (`TICK_SECONDS`) independently of `PollerService`.
   On each tick, `lastKnownValue` is appended to every metric's deque — including metrics whose
   underlying value has not changed. This ensures:
-    - All deques grow at a uniform rate
-    - Stable metrics (e.g. disk temps, filesystems) render as flat lines rather than sparse points
+  - All deques grow at a uniform rate
+  - Stable metrics (e.g. disk temps, filesystems) render as flat lines rather than sparse points
 - On row selection, the chart is populated from the existing deque (full history immediately
   visible). On deselection, the series is removed but the deque keeps accumulating.
 - Clicking a selected row a second time deselects it and clears the chart.
@@ -163,10 +161,10 @@ selected metric.
 ### Design
 
 - **hwmon discovery:** scans for chip name `amdgpu`, then:
-    - Junction temp: `temp*_label = junction` → `temp*_input`
-    - VRAM temp: `temp*_label = mem` → `temp*_input`
-    - Power (PPT): `power1_label = PPT` → `power1_average` (microwatts → watts)
-    - Fan: `fan1_input` (RPM)
+  - Junction temp: `temp*_label = junction` → `temp*_input`
+  - VRAM temp: `temp*_label = mem` → `temp*_input`
+  - Power (PPT): `power1_label = PPT` → `power1_average` (microwatts → watts)
+  - Fan: `fan1_input` (RPM)
 - **Load:** `<gpuDrmPath>/device/gpu_busy_percent`
 - **VRAM load:** `<gpuDrmPath>/device/mem_busy_percent`
 - **VRAM used/total:** `<gpuDrmPath>/device/mem_info_vram_used` and `mem_info_vram_total` (bytes)

@@ -31,7 +31,6 @@ public class PollerService {
   private final List<Collector<?>> defaultCollectors;
   private final List<Collector<?>> filesystemCollectors;
   private final List<Collector<?>> diskTempCollectors;
-  private final java.util.function.Function<Long, String> networkFormatter;
 
   /**
    * Creates a new PollerService with the given configuration and UI components.
@@ -46,7 +45,6 @@ public class PollerService {
       List<Collector<?>> defaultCollectors, List<Collector<?>> filesystemCollectors,
       List<Collector<?>> diskTempCollectors) {
     this.config = config;
-    this.networkFormatter = buildNetworkFormatter(config.getNetworkSpeedUnit());
     this.executor = Executors.newScheduledThreadPool(3);
     this.rows = rows;
     this.rowMap = buildRowMap(rows);
