@@ -33,4 +33,4 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         uses: GabrielBB/xvfb-action@v1
         with:
-          run: mvn -B sonar:sonar -Psonar
+          run: mvn -B jacoco:report sonar:sonar -Psonar
