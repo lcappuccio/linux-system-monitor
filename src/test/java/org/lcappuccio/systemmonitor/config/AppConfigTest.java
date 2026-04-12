@@ -17,30 +17,29 @@ class AppConfigTest {
   @Test
   void load_returnsBundledDefaults() {
     AppConfig config = AppConfig.load();
-    assertEquals("enp9s0", config.getNetInterface());
-    assertEquals("/sys/class/drm/card1", config.getGpuDrmPath());
-    assertEquals("/dev/sda", config.getDiskSataDevice());
-    assertEquals(2, config.getPollIntervalDefault());
-    assertEquals(60, config.getPollIntervalFilesystem());
-    assertEquals(15, config.getPollIntervalDiskTemp());
+    assertEquals("test0", config.getNetInterface());
+    assertEquals("/sys/test", config.getGpuDrmPath());
+    assertEquals("/dev/test", config.getDiskSataDevice());
+    assertEquals(99, config.getPollIntervalDefault());
+    assertEquals(88, config.getPollIntervalFilesystem());
+    assertEquals(77, config.getPollIntervalDiskTemp());
   }
 
   @Test
   void load_parsesFsMountpoints() {
     AppConfig config = AppConfig.load();
     assertNotNull(config.getFsMountpoints());
-    assertEquals(3, config.getFsMountpoints().size());
+    assertEquals(2, config.getFsMountpoints().size());
     assertEquals("/", config.getFsMountpoints().get(0));
-    assertEquals("/home", config.getFsMountpoints().get(1));
-    assertEquals("/data", config.getFsMountpoints().get(2));
+    assertEquals("/tmp", config.getFsMountpoints().get(1));
   }
 
   @Test
   void getters_returnExpectedValues() {
     AppConfig config = AppConfig.load();
-    assertEquals("enp9s0", config.getNetInterface());
-    assertEquals("/sys/class/drm/card1", config.getGpuDrmPath());
-    assertEquals("/dev/sda", config.getDiskSataDevice());
+    assertEquals("test0", config.getNetInterface());
+    assertEquals("/sys/test", config.getGpuDrmPath());
+    assertEquals("/dev/test", config.getDiskSataDevice());
   }
 
   @Test

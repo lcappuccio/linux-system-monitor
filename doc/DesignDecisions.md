@@ -35,6 +35,16 @@ Each collector is called in a try/catch — exceptions are logged, never propaga
 shutdown() calls executor.shutdownNow()
 No knowledge of JavaFX beyond Platform.runLater()
 
+### Display Format:
+
+Byte values are formatted using formatBytesWhole() for integer display:
+- < 1024: "X B"
+- < 1024*1024: "X KB"  
+- < 1024*1024*1024: "X MB"
+- >= 1024*1024*1024: "X GB" (rounded using Math.round())
+
+FileSystemCollectors shows "used / free / total", Memory shows individual values
+
 ## MemoryCollector
 
 Package: org.lcappuccio.systemmonitor.collectors
@@ -52,14 +62,20 @@ initialize() checks /proc/meminfo is readable, sets status OK or UNAVAILABLE
 ## FileSystemCollector
 
 Package: org.lcappuccio.systemmonitor.collectors
-Concern: Reports used/free/total bytes per configured mount point using java.nio.file.FileStore.
+Concern: Reports used/free/total bytes per configured mount point using df command.
 
 ### Design:
 
-No native calls — pure java.nio.file.Files.getFileStore(Path)
-initialize() validates each mount point in config.getFsMountpoints() exists and is accessible
-Mount points that don't exist at init time are skipped with ERROR log, status set to DEGRADED (others still work)
+Uses `df --block-size=1 <mount>` via ProcessBuilder to get accurate filesystem sizes.
+Important: df outputs in **1-byte blocks** (not 1K blocks) - values are direct bytes, no multiplication needed.
+java.nio.file.FileStore was initially used but had 12-20% discrepancy due to reserved blocks.
+
+initialize() validates each mount point in config.getFsMountpoints() by running df
+Mount points that don't exist at init time are skipped with ERROR log, status set to DEGRADED
 Returns FileSystemMetrics with a Map<String, FileSystemUsage>
+
+PollerService display format: "used / free / total" (e.g., "32 / 55 / 91 GB")
+Values are rounded to whole integers using Math.round()
 
 ## NetworkCollector
 
@@ -81,7 +97,7 @@ Concern: Reports CPU temperature, overall load percentage, and per-core frequenc
 
 ### Design:
 
-Temperature: hwmon discovery at startup — scan /sys/class/hwmon/hwmon*/name for k10temp, then find temp*_label containing Tccd1, read corresponding temp*_input (value in millidegrees, divide by 1000)
+Temperature: hwmon discovery at startup — scan /sys/class/hwmon/hwmon*/name for k10temp, then find temp*_label containing Tctl, read corresponding temp*_input (value in millidegrees, divide by 1000)
 Load: delta on /proc/stat first line — (total - idle) / total * 100 between two reads. Stores previous jiffies as instance fields
 Core frequencies: read /sys/devices/system/cpu/cpu<N>/cpufreq/scaling_cur_freq for even-numbered CPUs only (logical → physical core mapping for AMD). Value in kHz, convert to GHz
 initialize() performs hwmon discovery, logs ERROR and sets DEGRADED if k10temp not found (frequencies and load still work)

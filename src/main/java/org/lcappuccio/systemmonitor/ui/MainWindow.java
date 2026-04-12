@@ -1,5 +1,7 @@
 package org.lcappuccio.systemmonitor.ui;
 
+import java.util.ArrayList;
+import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
@@ -8,7 +10,15 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.StackPane;
+import org.lcappuccio.systemmonitor.collectors.Collector;
+import org.lcappuccio.systemmonitor.collectors.CpuCollector;
+import org.lcappuccio.systemmonitor.collectors.DiskCollector;
+import org.lcappuccio.systemmonitor.collectors.FileSystemCollector;
+import org.lcappuccio.systemmonitor.collectors.GpuCollector;
+import org.lcappuccio.systemmonitor.collectors.MemoryCollector;
+import org.lcappuccio.systemmonitor.collectors.NetworkCollector;
 import org.lcappuccio.systemmonitor.config.AppConfig;
+import org.lcappuccio.systemmonitor.poller.PollerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +38,7 @@ public class MainWindow {
 
   private final SplitPane root;
   private final ObservableList<MetricRow> rows;
+  private final PollerService pollerService;
 
   /**
    * Constructs the main window with the given application configuration.
@@ -45,7 +56,27 @@ public class MainWindow {
     root.setOrientation(Orientation.HORIZONTAL);
     root.setDividerPositions(DIVIDER_POSITION);
 
-    populateDummyData(config);
+    populateRows(config);
+
+    this.pollerService = createPollerService(config);
+    this.pollerService.start();
+  }
+
+  private PollerService createPollerService(AppConfig config) {
+    List<Collector<?>> defaultCollectors = new ArrayList<>();
+    defaultCollectors.add(new CpuCollector());
+    defaultCollectors.add(new MemoryCollector());
+    defaultCollectors.add(new GpuCollector());
+    defaultCollectors.add(new NetworkCollector());
+
+    List<Collector<?>> filesystemCollectors = new ArrayList<>();
+    filesystemCollectors.add(new FileSystemCollector(config));
+
+    List<Collector<?>> diskTempCollectors = new ArrayList<>();
+    diskTempCollectors.add(new DiskCollector());
+
+    return new PollerService(config, rows, defaultCollectors, filesystemCollectors,
+        diskTempCollectors);
   }
 
   /**
@@ -60,10 +91,13 @@ public class MainWindow {
   /**
    * Shuts down background services owned by this window.
    *
-   * <p>Called on window close. Currently a no-op until {@code PollerService} is wired in.
+   * <p>Called on window close. Delegates to PollerService.shutdown().
    */
   public void shutdown() {
     LOG.info("MainWindow shutdown");
+    if (pollerService != null) {
+      pollerService.shutdown();
+    }
   }
 
   private TableView<MetricRow> buildTable() {
@@ -94,7 +128,7 @@ public class MainWindow {
     return pane;
   }
 
-  private void populateDummyData(AppConfig config) {
+  private void populateRows(AppConfig config) {
     rows.addAll(
         // CPU
         new MetricRow("CPU", "Temperature", "—"),
