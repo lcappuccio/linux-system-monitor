@@ -62,10 +62,10 @@ public final class AppConfig {
     Properties props = new Properties();
     try (InputStream in = AppConfig.class.getResourceAsStream(BUNDLED_CONFIG)) {
       if (in == null) {
-        LOG.error("Bundled config not found on classpath: {}", BUNDLED_CONFIG);
+        LOG.warn("Bundled config not found on classpath: {}", BUNDLED_CONFIG);
       } else {
         props.load(in);
-        LOG.debug("Loaded bundled defaults from {}", BUNDLED_CONFIG);
+        LOG.info("Loaded bundled defaults from {}", BUNDLED_CONFIG);
       }
     } catch (IOException e) {
       LOG.error("Failed to load bundled config: {}", e.getMessage());

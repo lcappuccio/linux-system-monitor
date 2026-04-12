@@ -146,7 +146,7 @@ public class CpuCollector implements Collector<CpuMetrics> {
       String content = Files.readString(Paths.get(tempInputPath)).trim();
       return Double.parseDouble(content) / 1000.0;
     } catch (IOException e) {
-      LOG.debug("Failed to read temperature: {}", e.getMessage());
+      LOG.error("Failed to read temperature: {}", e.getMessage());
       return NO_TEMP;
     }
   }
@@ -225,7 +225,7 @@ public class CpuCollector implements Collector<CpuMetrics> {
         return Double.parseDouble(content) / 1_000_000.0;
       }
     } catch (IOException e) {
-      LOG.debug("Failed to read freq for cpu{}: {}", coreId, e.getMessage());
+      LOG.error("Failed to read freq for cpu{}: {}", coreId, e.getMessage());
     }
     return 0.0;
   }

@@ -109,7 +109,7 @@ public class DiskCollector implements Collector<DiskMetrics> {
       String content = Files.readString(Paths.get(nvmeTempPath)).trim();
       return Double.parseDouble(content) / 1000.0;
     } catch (IOException | NumberFormatException e) {
-      LOG.debug("Failed to read NVMe temp: {}", e.getMessage());
+      LOG.error("Failed to read NVMe temp: {}", e.getMessage());
       return NO_TEMP;
     }
   }
@@ -128,7 +128,7 @@ public class DiskCollector implements Collector<DiskMetrics> {
 
       boolean exited = process.waitFor(5, TimeUnit.SECONDS);
       if (!exited || process.exitValue() != 0) {
-        LOG.debug("smartctl exit code: {}", process.exitValue());
+        LOG.error("smartctl exit code: {}", process.exitValue());
         return NO_TEMP;
       }
 
@@ -142,7 +142,7 @@ public class DiskCollector implements Collector<DiskMetrics> {
         }
       }
     } catch (IOException | InterruptedException e) {
-      LOG.debug("Failed to read SATA temp: {}", e.getMessage());
+      LOG.error("Failed to read SATA temp: {}", e.getMessage());
     } finally {
       if (process != null && process.isAlive()) {
         process.destroyForcibly();
@@ -157,7 +157,7 @@ public class DiskCollector implements Collector<DiskMetrics> {
       try {
         return Double.parseDouble(parts[9]);
       } catch (NumberFormatException e) {
-        LOG.debug("Failed to parse temperature: {}", line);
+        LOG.error("Failed to parse temperature: {}", line);
       }
     }
     return NO_TEMP;
