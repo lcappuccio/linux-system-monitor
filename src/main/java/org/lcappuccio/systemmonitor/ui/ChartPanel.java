@@ -188,24 +188,6 @@ public class ChartPanel {
       series.setName(label);
       chart.getData().add(series);
       seriesMap.put(key, series);
-
-      // Apply color after node is attached to scene
-      String color = group.seriesColors().get(i);
-      int finalI = i;
-      series.nodeProperty().addListener((obs, oldNode, newNode) -> {
-        if (newNode != null) {
-          newNode.setStyle("-fx-stroke: " + color + "; -fx-stroke-width: 0.5px;");
-        }
-        // Color legend symbol
-        if (chart.getData().size() > finalI) {
-          var legendItems = chart.lookupAll(".chart-legend-item-symbol");
-          legendItems.forEach(node -> {
-            if (node.getUserData() != null && node.getUserData().equals(label)) {
-              node.setStyle("-fx-background-color: " + color + ";");
-            }
-          });
-        }
-      });
     }
 
     return chart;
