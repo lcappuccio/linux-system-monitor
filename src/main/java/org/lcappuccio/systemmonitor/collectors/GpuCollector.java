@@ -106,7 +106,7 @@ public class GpuCollector implements Collector<GpuMetrics> {
       if (Files.exists(powerLabelFile)) {
         String label = Files.readString(powerLabelFile).trim();
         if ("PPT".equals(label)) {
-          powerPath = hwmon.resolve("power1_input").toString();
+          powerPath = hwmon.resolve("power1_average").toString();
         }
       }
     } catch (IOException e) {
