@@ -9,7 +9,6 @@ import javafx.scene.Parent;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.layout.StackPane;
 import org.lcappuccio.systemmonitor.collectors.Collector;
 import org.lcappuccio.systemmonitor.collectors.CpuCollector;
 import org.lcappuccio.systemmonitor.collectors.DiskCollector;

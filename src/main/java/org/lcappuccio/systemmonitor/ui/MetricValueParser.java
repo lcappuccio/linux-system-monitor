@@ -71,21 +71,20 @@ public final class MetricValueParser {
    * @return the first numeric substring, or empty string if none found
    */
   private static String extractFirstNumericToken(String value) {
-    StringBuilder sb = new StringBuilder();
+    StringBuilder stringBuilder = new StringBuilder();
     boolean seenDigit = false;
     boolean seenDot = false;
 
     for (int i = 0; i < value.length(); i++) {
       char c = value.charAt(i);
-
-      if (c == '-' && sb.length() == 0 && i + 1 < value.length()
+      if (c == '-' && stringBuilder.isEmpty() && i + 1 < value.length()
           && Character.isDigit(value.charAt(i + 1))) {
-        sb.append(c);
+        stringBuilder.append(c);
       } else if (Character.isDigit(c)) {
-        sb.append(c);
+        stringBuilder.append(c);
         seenDigit = true;
       } else if (c == '.' && seenDigit && !seenDot) {
-        sb.append(c);
+        stringBuilder.append(c);
         seenDot = true;
       } else if (seenDigit) {
         // Stop at first non-numeric character after digits
@@ -94,7 +93,7 @@ public final class MetricValueParser {
     }
 
     // Avoid returning a bare "-" or trailing dot
-    String result = sb.toString();
+    String result = stringBuilder.toString();
     if (result.equals("-") || result.equals(".")) {
       return "";
     }

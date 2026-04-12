@@ -3,6 +3,7 @@ package org.lcappuccio.systemmonitor.ui;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
+import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.collections.ObservableList;
@@ -141,7 +142,7 @@ public class ChartPanel {
         Duration.seconds(TICK_SECONDS),
         e -> onTick()
     ));
-    tl.setCycleCount(Timeline.INDEFINITE);
+    tl.setCycleCount(Animation.INDEFINITE);
     return tl;
   }
 
