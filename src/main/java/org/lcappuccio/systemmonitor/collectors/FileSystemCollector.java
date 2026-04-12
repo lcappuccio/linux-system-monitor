@@ -20,12 +20,10 @@ public class FileSystemCollector implements Collector<FileSystemMetrics> {
 
   private static final Logger LOG = LoggerFactory.getLogger(FileSystemCollector.class);
 
-  private final AppConfig config;
   private final List<String> mountPoints;
   private CollectorStatus status = CollectorStatus.UNAVAILABLE;
 
   public FileSystemCollector(AppConfig config) {
-    this.config = config;
     this.mountPoints = config.getFsMountpoints();
   }
 
@@ -33,7 +31,7 @@ public class FileSystemCollector implements Collector<FileSystemMetrics> {
   public void initialize() {
     List<String> validMounts = mountPoints.stream()
         .filter(this::isMountValid)
-        .collect(Collectors.toList());
+        .toList();
 
     if (validMounts.isEmpty()) {
       status = CollectorStatus.UNAVAILABLE;

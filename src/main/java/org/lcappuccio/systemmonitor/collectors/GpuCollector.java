@@ -20,7 +20,6 @@ public class GpuCollector implements Collector<GpuMetrics> {
   private static final String HWMON_PATH = "/sys/class/hwmon";
   private static final double NO_TEMP = Double.NaN;
 
-  private final AppConfig config;
   private final String drmPath;
   private String hwmonPath = null;
   private String junctionTempPath = null;
@@ -31,7 +30,6 @@ public class GpuCollector implements Collector<GpuMetrics> {
   private CollectorStatus status = CollectorStatus.UNAVAILABLE;
 
   public GpuCollector(AppConfig config) {
-    this.config = config;
     this.drmPath = config.getGpuDrmPath();
   }
 

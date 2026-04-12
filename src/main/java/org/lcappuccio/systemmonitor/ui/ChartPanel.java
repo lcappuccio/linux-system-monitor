@@ -167,7 +167,7 @@ public class ChartPanel {
         boolean atCapacity = activeSeries.getData().size() >= HISTORY_SIZE;
         activeSeries.getData().add(new XYChart.Data<>(activeSeries.getData().size(), value));
         if (atCapacity) {
-          activeSeries.getData().remove(0);
+          activeSeries.getData().removeFirst();
           // Renumber X values so axis always runs 0..HISTORY_SIZE-1
           for (int i = 0; i < activeSeries.getData().size(); i++) {
             activeSeries.getData().get(i).setXValue(i);

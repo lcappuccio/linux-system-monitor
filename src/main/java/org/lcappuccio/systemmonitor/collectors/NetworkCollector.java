@@ -23,7 +23,6 @@ public class NetworkCollector implements Collector<NetworkMetrics> {
   private static final String PROC_NET_DEV = "/proc/net/dev";
   private static final String SYS_NET_PATH = "/sys/class/net/";
 
-  private final AppConfig config;
   private final String interfaceName;
 
   private CollectorStatus status = CollectorStatus.UNAVAILABLE;
@@ -34,7 +33,6 @@ public class NetworkCollector implements Collector<NetworkMetrics> {
   private boolean hasPrevious = false;
 
   public NetworkCollector(AppConfig config) {
-    this.config = config;
     this.interfaceName = config.getNetInterface();
   }
 

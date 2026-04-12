@@ -53,6 +53,6 @@ class MainWindowTest {
   void shutdown_doesNotThrow() {
     AppConfig config = AppConfig.load();
     MainWindow window = new MainWindow(config);
-    assertDoesNotThrow(() -> window.shutdown());
+    assertDoesNotThrow(window::shutdown);
   }
 }
