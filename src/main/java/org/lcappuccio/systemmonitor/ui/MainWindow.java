@@ -149,6 +149,7 @@ public class MainWindow {
         new MetricRow("GPU", "VRAM Temperature", "—"),
         new MetricRow("GPU", "VRAM Load", "—"),
         new MetricRow("GPU", "Power", "—"),
+        new MetricRow("GPU", "Fan", "—"),
         // Disks
         new MetricRow("Disks", "NVMe Temperature", "—"),
         new MetricRow("Disks", "SSD Temperature", "—")

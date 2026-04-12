@@ -28,6 +28,7 @@ public class GpuCollector implements Collector<GpuMetrics> {
   private String junctionTempPath = null;
   private String vramTempPath = null;
   private String powerPath = null;
+  private String fanPath = null;
 
   private CollectorStatus status = CollectorStatus.UNAVAILABLE;
 
@@ -109,6 +110,11 @@ public class GpuCollector implements Collector<GpuMetrics> {
           powerPath = hwmon.resolve("power1_average").toString();
         }
       }
+
+      Path fanFile = hwmon.resolve("fan1_input");
+      if (Files.exists(fanFile)) {
+        fanPath = fanFile.toString();
+      }
     } catch (IOException e) {
       LOG.error("Failed to find GPU sensors: {}", e.getMessage());
     }
@@ -127,6 +133,7 @@ public class GpuCollector implements Collector<GpuMetrics> {
       double load = readDrmMetric("gpu_busy_percent");
       double vramLoad = readDrmMetric("mem_busy_percent");
       long[] vram = readVramUsage();
+      double fan = readFan();
 
       return Optional.of(new GpuMetrics(
           junctionTemp,
@@ -135,7 +142,8 @@ public class GpuCollector implements Collector<GpuMetrics> {
           vram[1],
           vramTemp,
           vramLoad,
-          power));
+          power,
+          fan));
     } catch (Exception e) {
       LOG.error("Failed to collect GPU metrics: {}", e.getMessage());
       return Optional.empty();
@@ -165,6 +173,19 @@ public class GpuCollector implements Collector<GpuMetrics> {
       return Double.parseDouble(content) / 1_000_000.0;
     } catch (Exception e) {
       LOG.debug("Failed to read power: {}", e.getMessage());
+      return 0.0;
+    }
+  }
+
+  private double readFan() {
+    if (fanPath == null) {
+      return 0.0;
+    }
+    try {
+      String content = Files.readString(Paths.get(fanPath)).trim();
+      return Double.parseDouble(content);
+    } catch (Exception e) {
+      LOG.debug("Failed to read fan: {}", e.getMessage());
       return 0.0;
     }
   }

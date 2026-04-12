@@ -195,6 +195,8 @@ public class PollerService {
         setIfPresent("GPU.VRAM Temperature", vramTempStr);
         setIfPresent("GPU.VRAM Load", String.format("%.0f%%", gpu.vramLoadPercent()));
         setIfPresent("GPU.Power", String.format("%.1f W", gpu.powerWatts()));
+        int fanRpm = (int) gpu.fanRpm();
+        setIfPresent("GPU.Fan", fanRpm > 0 ? fanRpm + " RPM" : "N/A");
       });
     } else if (metrics instanceof org.lcappuccio.systemmonitor.model.FileSystemMetrics fs) {
       Platform.runLater(() -> {
