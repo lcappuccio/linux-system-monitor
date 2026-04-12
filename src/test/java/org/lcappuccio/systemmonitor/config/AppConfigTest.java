@@ -55,4 +55,29 @@ class AppConfigTest {
     AppConfig config = AppConfig.load();
     assertEquals("Kbps", config.getNetworkSpeedUnit());
   }
+
+  @Test
+  void colorGetters_returnExpectedValues() {
+    AppConfig config = AppConfig.load();
+    assertEquals("#0A6FC2", config.getColorCpu());
+    assertEquals("#F44336", config.getColorGpu());
+    assertEquals("#FF9800", config.getColorVram());
+    assertEquals("#9E9E9E", config.getColorNvme());
+    assertEquals("#607D8B", config.getColorSata());
+    assertEquals("#2EB82E", config.getColorMemoryUsed());
+    assertEquals("#FFCCFF", config.getColorSwapUsed());
+  }
+
+  @Test
+  void colorCpuClocks_returnsExpectedList() {
+    AppConfig config = AppConfig.load();
+    var cpuClocks = config.getColorCpuClocks();
+    assertNotNull(cpuClocks);
+    assertFalse(cpuClocks.isEmpty());
+    assertEquals("#0A305C", cpuClocks.get(0));
+    assertEquals("#0D3C73", cpuClocks.get(1));
+    assertEquals("#0F488A", cpuClocks.get(2));
+    // Test that it parses the comma-separated string correctly
+    assertEquals(16, cpuClocks.size());
+  }
 }
