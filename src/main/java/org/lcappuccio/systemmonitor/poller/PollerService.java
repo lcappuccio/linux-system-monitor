@@ -164,7 +164,7 @@ public class PollerService {
         if (Double.isNaN(cpu.temperatureCelsius())) {
           tempStr = "N/A";
         } else {
-          tempStr = String.format("%.1f°C", cpu.temperatureCelsius());
+          tempStr = String.format("%.0f°C", cpu.temperatureCelsius());
         }
         setIfPresent("CPU.Temperature", tempStr);
         setIfPresent("CPU.Load", String.format("%.1f%%", cpu.loadPercent()));
@@ -179,7 +179,7 @@ public class PollerService {
         if (Double.isNaN(gpu.temperatureCelsius())) {
           tempStr = "N/A";
         } else {
-          tempStr = String.format("%.1f°C", gpu.temperatureCelsius());
+          tempStr = String.format("%.0f°C", gpu.temperatureCelsius());
         }
         setIfPresent("GPU.Temperature", tempStr);
         setIfPresent("GPU.Load", String.format("%.0f%%", gpu.loadPercent()));
@@ -190,11 +190,11 @@ public class PollerService {
         if (Double.isNaN(gpu.vramTemperatureCelsius())) {
           vramTempStr = "N/A";
         } else {
-          vramTempStr = String.format("%.1f°C", gpu.vramTemperatureCelsius());
+          vramTempStr = String.format("%.0f°C", gpu.vramTemperatureCelsius());
         }
         setIfPresent("GPU.VRAM Temperature", vramTempStr);
         setIfPresent("GPU.VRAM Load", String.format("%.0f%%", gpu.vramLoadPercent()));
-        setIfPresent("GPU.Power", String.format("%.1f W", gpu.powerWatts()));
+        setIfPresent("GPU.Power", String.format("%.0f W", gpu.powerWatts()));
         int fanRpm = (int) gpu.fanRpm();
         setIfPresent("GPU.Fan", fanRpm + " RPM");
       });
