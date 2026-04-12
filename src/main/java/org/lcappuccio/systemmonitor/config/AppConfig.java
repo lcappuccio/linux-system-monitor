@@ -32,6 +32,7 @@ public final class AppConfig {
   private final String netInterface;
   private final String gpuDrmPath;
   private final String diskSataDevice;
+  private final String networkSpeedUnit;
   private final List<String> fsMountpoints;
   private final int pollIntervalDefault;
   private final int pollIntervalFilesystem;
@@ -41,6 +42,7 @@ public final class AppConfig {
     this.netInterface = props.getProperty("net.interface");
     this.gpuDrmPath = props.getProperty("gpu.drm.path");
     this.diskSataDevice = props.getProperty("disk.sata.device");
+    this.networkSpeedUnit = props.getProperty("network.speed.unit");
     this.fsMountpoints = Arrays.asList(props.getProperty("fs.mountpoints").split(","));
     this.pollIntervalDefault = parseInt(props, "poll.interval.default", 2);
     this.pollIntervalFilesystem = parseInt(props, "poll.interval.filesystem", 60);
@@ -162,5 +164,14 @@ public final class AppConfig {
    */
   public int getPollIntervalDiskTemp() {
     return pollIntervalDiskTemp;
+  }
+
+  /**
+   * Returns the selected network speed for charts.
+   *
+   * @return network metric to be used in network chart
+   */
+  public String getNetworkSpeedUnit() {
+    return networkSpeedUnit;
   }
 }

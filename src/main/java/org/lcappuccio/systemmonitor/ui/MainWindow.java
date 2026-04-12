@@ -121,7 +121,11 @@ public class MainWindow {
 
     TableView<MetricRow> table = new TableView<>(rows);
     table.getColumns().addAll(sectionCol, metricCol, valueCol);
-    table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+    table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
+    sectionCol.prefWidthProperty().bind(table.widthProperty().multiply(0.20));
+    metricCol.prefWidthProperty().bind(table.widthProperty().multiply(0.40));
+    valueCol.prefWidthProperty().bind(table.widthProperty().multiply(0.40));
+
     table.setPlaceholder(new javafx.scene.control.Label("No data available"));
 
     table.getSelectionModel().selectedItemProperty().addListener(

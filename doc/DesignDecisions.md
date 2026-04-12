@@ -38,6 +38,8 @@ results to `MetricRow` via `Platform.runLater()`.
 - Each collector is called in a try/catch — exceptions are logged, never propagated.
 - `shutdown()` calls `executor.shutdownNow()` with a 5-second graceful timeout.
 - No knowledge of `ChartPanel` — pushes only to `MetricRow`.
+- Network transfer rate metric is defined in properties to avoid having to dynamically scale/downscale chart
+when moving between MB/s, KB/s and so on.
 
 ### Display Format
 

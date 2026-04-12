@@ -24,6 +24,7 @@ public class PollerService {
 
   private static final Logger LOG = LoggerFactory.getLogger(PollerService.class);
 
+  private final AppConfig config;
   private final ScheduledExecutorService executor;
   private final ObservableList<MetricRow> rows;
   private final Map<String, MetricRow> rowMap;
@@ -43,6 +44,7 @@ public class PollerService {
   public PollerService(AppConfig config, ObservableList<MetricRow> rows,
       List<Collector<?>> defaultCollectors, List<Collector<?>> filesystemCollectors,
       List<Collector<?>> diskTempCollectors) {
+    this.config = config;
     this.executor = Executors.newScheduledThreadPool(3);
     this.rows = rows;
     this.rowMap = buildRowMap(rows);
@@ -147,16 +149,16 @@ public class PollerService {
   private void updateRows(String section, Object metrics) {
     if (metrics instanceof org.lcappuccio.systemmonitor.model.MemoryMetrics mem) {
       Platform.runLater(() -> {
-        setIfPresent("Memory.Used", formatBytes(mem.memUsedBytes()));
-        setIfPresent("Memory.Total", formatBytes(mem.memTotalBytes()));
-        setIfPresent("Memory.Swap Used", formatBytes(mem.swapUsedBytes()));
+        setIfPresent("Memory.Used", formatBytesGpu(mem.memUsedBytes()));
+        setIfPresent("Memory.Total", formatBytesGpu(mem.memTotalBytes()));
+        setIfPresent("Memory.Swap Used", formatBytesGpu(mem.swapUsedBytes()));
       });
     } else if (metrics instanceof org.lcappuccio.systemmonitor.model.NetworkMetrics net) {
       Platform.runLater(() -> {
         setIfPresent("Network.IP Address", net.ipAddress());
         setIfPresent("Network.Link Speed", net.linkSpeedMbps() + " Mbps");
-        setIfPresent("Network.Upload", formatBytesPerSec(net.uploadBytesPerSec()));
-        setIfPresent("Network.Download", formatBytesPerSec(net.downloadBytesPerSec()));
+        setIfPresent("Network.Upload", formatNetworkBitsPerSec(net.uploadBytesPerSec()));
+        setIfPresent("Network.Download", formatNetworkBitsPerSec(net.downloadBytesPerSec()));
       });
     } else if (metrics instanceof org.lcappuccio.systemmonitor.model.CpuMetrics cpu) {
       Platform.runLater(() -> {
@@ -183,8 +185,8 @@ public class PollerService {
         }
         setIfPresent("GPU.Temperature", tempStr);
         setIfPresent("GPU.Load", String.format("%.0f%%", gpu.loadPercent()));
-        String vramUsedStr = formatBytes(gpu.vramUsedBytes());
-        String vramTotalStr = formatBytes(gpu.vramTotalBytes());
+        String vramUsedStr = formatBytesGpu(gpu.vramUsedBytes());
+        String vramTotalStr = formatBytesGpu(gpu.vramTotalBytes());
         setIfPresent("GPU.VRAM Used", vramUsedStr + " / " + vramTotalStr);
         String vramTempStr;
         if (Double.isNaN(gpu.vramTemperatureCelsius())) {
@@ -203,9 +205,9 @@ public class PollerService {
         for (var entry : fs.usage().entrySet()) {
           String mount = entry.getKey();
           var usage = entry.getValue();
-          String usedStr = formatBytesWhole(usage.usedBytes());
-          String freeStr = formatBytesWhole(usage.freeBytes());
-          String totalStr = formatBytesWhole(usage.totalBytes());
+          String usedStr = formatBytesFileSystem(usage.usedBytes());
+          String freeStr = formatBytesFileSystem(usage.freeBytes());
+          String totalStr = formatBytesFileSystem(usage.totalBytes());
           setIfPresent("Filesystems." + mount, usedStr + " / " + freeStr + " / " + totalStr);
         }
       });
@@ -228,40 +230,28 @@ public class PollerService {
     }
   }
 
-  private String formatBytes(long bytes) {
-    if (bytes < 1024) {
-      return bytes + " B";
-    } else if (bytes < 1024 * 1024) {
-      return String.format("%.1f KB", bytes / 1024.0);
-    } else if (bytes < 1024 * 1024 * 1024) {
-      return String.format("%.1f MB", bytes / (1024.0 * 1024));
-    } else {
-      return String.format("%.2f GB", bytes / (1024.0 * 1024 * 1024));
-    }
+  private String formatBytesGpu(long bytes) {
+    return String.format("%.2f GB", (bytes / (1024.0 * 1024 * 1024)));
   }
 
-  private String formatBytesWhole(long bytes) {
-    if (bytes < 1024) {
-      return bytes + " B";
-    } else if (bytes < 1024 * 1024) {
-      return (bytes / 1024) + " KB";
-    } else if (bytes < 1024 * 1024 * 1024) {
-      return (bytes / (1024 * 1024)) + " MB";
-    } else {
+  private String formatBytesFileSystem(long bytes) {
+    if (bytes < (1024L * 1024 * 1024 * 1024)) {
       return Math.round(bytes / (1024.0 * 1024 * 1024)) + " GB";
+    } else {
+      return Math.round(bytes / (1024.0 * 1024 * 1024 * 1024)) + " TB";
     }
   }
 
-  private String formatBytesPerSec(long bytes) {
-    if (bytes < 1024) {
-      return bytes + " B/s";
-    } else if (bytes < 1024 * 1024) {
-      return String.format("%.1f KB/s", bytes / 1024.0);
-    } else if (bytes < 1024 * 1024 * 1024) {
-      return String.format("%.1f MB/s", bytes / (1024.0 * 1024));
-    } else {
-      return String.format("%.2f GB/s", bytes / (1024.0 * 1024 * 1024));
-    }
+  private String formatNetworkBitsPerSec(long bytes) {
+    // Options: KBps, MBps, GB/s, bps, Kbps, Mbps, Gbps
+    return switch (config.getNetworkSpeedUnit()) {
+      case ("KBps") -> String.format("%.0f KB/s", bytes / 1024.0);
+      case ("MBps") -> String.format("%.0f MB/s", bytes / (1024.0 * 1024));
+      case ("GBps") -> String.format("%.0f GB/s", bytes / (1024.0 * 1024 * 1024));
+      case ("Mbps") -> String.format("%.0f Mbps", bytes * 8 / (1024.0 * 1024));
+      case ("Gbps") -> String.format("%.0f Gbps", bytes * 8 / (1024.0 * 1024 * 1024));
+      default -> String.format("%.0f Kbps", bytes * 8 / 1024.0);
+    };
   }
 
   /**

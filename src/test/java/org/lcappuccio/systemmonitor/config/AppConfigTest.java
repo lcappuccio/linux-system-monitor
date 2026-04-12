@@ -49,4 +49,10 @@ class AppConfigTest {
     assertFalse(config.getPollIntervalFilesystem() <= 0);
     assertFalse(config.getPollIntervalDiskTemp() <= 0);
   }
+
+  @Test
+  void networkSpeed_hasValidValues() {
+    AppConfig config = AppConfig.load();
+    assertEquals("Kbps", config.getNetworkSpeedUnit());
+  }
 }
