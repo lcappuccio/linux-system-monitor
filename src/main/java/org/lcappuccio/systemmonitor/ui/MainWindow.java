@@ -129,18 +129,16 @@ public class MainWindow {
   }
 
   private void populateRows(AppConfig config) {
+    List<Integer> coreIds = discoverCpuCores();
+
+    rows.add(new MetricRow("CPU", "Temperature", "—"));
+    rows.add(new MetricRow("CPU", "Load", "—"));
+
+    for (int coreId : coreIds) {
+      rows.add(new MetricRow("CPU", "Core " + coreId, "—"));
+    }
+
     rows.addAll(
-        // CPU
-        new MetricRow("CPU", "Temperature", "—"),
-        new MetricRow("CPU", "Load", "—"),
-        new MetricRow("CPU", "Core 0 Freq", "—"),
-        new MetricRow("CPU", "Core 1 Freq", "—"),
-        new MetricRow("CPU", "Core 2 Freq", "—"),
-        new MetricRow("CPU", "Core 3 Freq", "—"),
-        new MetricRow("CPU", "Core 4 Freq", "—"),
-        new MetricRow("CPU", "Core 5 Freq", "—"),
-        new MetricRow("CPU", "Core 6 Freq", "—"),
-        new MetricRow("CPU", "Core 7 Freq", "—"),
         // Memory
         new MetricRow("Memory", "Used", "—"),
         new MetricRow("Memory", "Swap Used", "—"),
@@ -168,5 +166,11 @@ public class MainWindow {
         new MetricRow("Network", "Upload", "—"),
         new MetricRow("Network", "Download", "—")
     );
+  }
+
+  private List<Integer> discoverCpuCores() {
+    CpuCollector tempCollector = new CpuCollector();
+    tempCollector.initialize();
+    return tempCollector.getCoreIds();
   }
 }

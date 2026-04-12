@@ -158,6 +158,21 @@ public class PollerService {
         setIfPresent("Network.Upload", formatBytesPerSec(net.uploadBytesPerSec()));
         setIfPresent("Network.Download", formatBytesPerSec(net.downloadBytesPerSec()));
       });
+    } else if (metrics instanceof org.lcappuccio.systemmonitor.model.CpuMetrics cpu) {
+      Platform.runLater(() -> {
+        String tempStr;
+        if (Double.isNaN(cpu.temperatureCelsius())) {
+          tempStr = "N/A";
+        } else {
+          tempStr = String.format("%.1f°C", cpu.temperatureCelsius());
+        }
+        setIfPresent("CPU.Temperature", tempStr);
+        setIfPresent("CPU.Load", String.format("%.1f%%", cpu.loadPercent()));
+        for (int i = 0; i < cpu.coreFrequenciesGhz().size(); i++) {
+          double ghz = cpu.coreFrequenciesGhz().get(i);
+          setIfPresent("CPU.Core " + i, String.format("%.2f GHz", ghz));
+        }
+      });
     } else if (metrics instanceof org.lcappuccio.systemmonitor.model.FileSystemMetrics fs) {
       Platform.runLater(() -> {
         for (var entry : fs.usage().entrySet()) {
