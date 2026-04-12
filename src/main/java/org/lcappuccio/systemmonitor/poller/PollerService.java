@@ -36,11 +36,11 @@ public class PollerService {
   /**
    * Creates a new PollerService with the given configuration and UI components.
    *
-   * @param config the application configuration
-   * @param rows the observable list of metric rows to update
-   * @param defaultCollectors collectors polled at default interval (2s)
+   * @param config               the application configuration
+   * @param rows                 the observable list of metric rows to update
+   * @param defaultCollectors    collectors polled at default interval (2s)
    * @param filesystemCollectors collectors polled at filesystem interval (60s)
-   * @param diskTempCollectors collectors polled at disk temperature interval (15s)
+   * @param diskTempCollectors   collectors polled at disk temperature interval (15s)
    */
   public PollerService(AppConfig config, ObservableList<MetricRow> rows,
       List<Collector<?>> defaultCollectors, List<Collector<?>> filesystemCollectors,
@@ -130,9 +130,9 @@ public class PollerService {
   private void updateRows(String section, Object metrics) {
     if (metrics instanceof org.lcappuccio.systemmonitor.model.MemoryMetrics mem) {
       Platform.runLater(() -> {
-        setIfPresent("Memory.Used", formatBytesGpu(mem.memUsedBytes()));
-        setIfPresent("Memory.Total", formatBytesGpu(mem.memTotalBytes()));
-        setIfPresent("Memory.Swap Used", formatBytesGpu(mem.swapUsedBytes()));
+        setIfPresent("Memory.Used", formatBytesMemory(mem.memUsedBytes()) + " / "
+            + formatBytesMemory(mem.memTotalBytes()));
+        setIfPresent("Memory.Swap Used", formatBytesMemory(mem.swapUsedBytes()));
       });
     } else if (metrics instanceof org.lcappuccio.systemmonitor.model.NetworkMetrics net) {
       Platform.runLater(() -> {
@@ -166,8 +166,8 @@ public class PollerService {
         }
         setIfPresent("GPU.Temperature", tempStr);
         setIfPresent("GPU.Load", String.format("%.0f%%", gpu.loadPercent()));
-        String vramUsedStr = formatBytesGpu(gpu.vramUsedBytes());
-        String vramTotalStr = formatBytesGpu(gpu.vramTotalBytes());
+        String vramUsedStr = formatBytesMemory(gpu.vramUsedBytes());
+        String vramTotalStr = formatBytesMemory(gpu.vramTotalBytes());
         setIfPresent("GPU.VRAM Used", vramUsedStr + " / " + vramTotalStr);
         String vramTempStr;
         if (Double.isNaN(gpu.vramTemperatureCelsius())) {
@@ -211,8 +211,8 @@ public class PollerService {
     }
   }
 
-  private String formatBytesGpu(long bytes) {
-    return String.format("%.2f GB", (bytes / (1024.0 * 1024 * 1024)));
+  private String formatBytesMemory(long bytes) {
+    return String.format("%d GB", Math.round(bytes / (1024.0 * 1024 * 1024)));
   }
 
   private String formatBytesFileSystem(long bytes) {
@@ -243,7 +243,7 @@ public class PollerService {
       case "GBps" -> bytes -> String.format("%.0f GB/s", bytes / (1024.0 * 1024 * 1024));
       case "Mbps" -> bytes -> String.format("%.0f Mbps", bytes * 8 / (1024.0 * 1024));
       case "Gbps" -> bytes -> String.format("%.0f Gbps", bytes * 8 / (1024.0 * 1024 * 1024));
-      default    -> bytes -> String.format("%.0f Kbps", bytes * 8 / 1024.0);
+      default -> bytes -> String.format("%.0f Kbps", bytes * 8 / 1024.0);
     };
   }
 
