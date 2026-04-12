@@ -31,6 +31,7 @@ public class PollerService {
   private final List<Collector<?>> defaultCollectors;
   private final List<Collector<?>> filesystemCollectors;
   private final List<Collector<?>> diskTempCollectors;
+  private final java.util.function.Function<Long, String> networkFormatter;
 
   /**
    * Creates a new PollerService with the given configuration and UI components.
@@ -45,6 +46,7 @@ public class PollerService {
       List<Collector<?>> defaultCollectors, List<Collector<?>> filesystemCollectors,
       List<Collector<?>> diskTempCollectors) {
     this.config = config;
+    this.networkFormatter = buildNetworkFormatter(config.getNetworkSpeedUnit());
     this.executor = Executors.newScheduledThreadPool(3);
     this.rows = rows;
     this.rowMap = buildRowMap(rows);
@@ -86,34 +88,13 @@ public class PollerService {
    * </ul>
    */
   public void start() {
-    long defaultInterval = getPollInterval(config());
-    long filesystemInterval = getFilesystemInterval(config());
-    long diskTempInterval = getDiskTempInterval(config());
-
-    executor.scheduleAtFixedRate(this::runDefaultCollectors, 0, defaultInterval,
-        TimeUnit.SECONDS);
-    executor.scheduleAtFixedRate(this::runFilesystemCollectors, 0, filesystemInterval,
-        TimeUnit.SECONDS);
-    executor.scheduleAtFixedRate(this::runDiskTempCollectors, 0, diskTempInterval,
-        TimeUnit.SECONDS);
-
+    executor.scheduleAtFixedRate(this::runDefaultCollectors, 0,
+        config.getPollIntervalDefault(), TimeUnit.SECONDS);
+    executor.scheduleAtFixedRate(this::runFilesystemCollectors, 0,
+        config.getPollIntervalFilesystem(), TimeUnit.SECONDS);
+    executor.scheduleAtFixedRate(this::runDiskTempCollectors, 0,
+        config.getPollIntervalDiskTemp(), TimeUnit.SECONDS);
     LOG.info("PollerService started");
-  }
-
-  private AppConfig config() {
-    return AppConfig.load();
-  }
-
-  private long getPollInterval(AppConfig config) {
-    return config.getPollIntervalDefault();
-  }
-
-  private long getFilesystemInterval(AppConfig config) {
-    return config.getPollIntervalFilesystem();
-  }
-
-  private long getDiskTempInterval(AppConfig config) {
-    return config.getPollIntervalDiskTemp();
   }
 
   private void runDefaultCollectors() {
@@ -251,6 +232,18 @@ public class PollerService {
       case ("Mbps") -> String.format("%.0f Mbps", bytes * 8 / (1024.0 * 1024));
       case ("Gbps") -> String.format("%.0f Gbps", bytes * 8 / (1024.0 * 1024 * 1024));
       default -> String.format("%.0f Kbps", bytes * 8 / 1024.0);
+    };
+  }
+
+  private static java.util.function.Function<Long, String> buildNetworkFormatter(
+      String unit) {
+    return switch (unit) {
+      case "KBps" -> bytes -> String.format("%.0f KB/s", bytes / 1024.0);
+      case "MBps" -> bytes -> String.format("%.0f MB/s", bytes / (1024.0 * 1024));
+      case "GBps" -> bytes -> String.format("%.0f GB/s", bytes / (1024.0 * 1024 * 1024));
+      case "Mbps" -> bytes -> String.format("%.0f Mbps", bytes * 8 / (1024.0 * 1024));
+      case "Gbps" -> bytes -> String.format("%.0f Gbps", bytes * 8 / (1024.0 * 1024 * 1024));
+      default    -> bytes -> String.format("%.0f Kbps", bytes * 8 / 1024.0);
     };
   }
 
