@@ -70,7 +70,7 @@ public class MainWindow {
     defaultCollectors.add(new NetworkCollector());
 
     List<Collector<?>> filesystemCollectors = new ArrayList<>();
-    filesystemCollectors.add(new FileSystemCollector());
+    filesystemCollectors.add(new FileSystemCollector(config));
 
     List<Collector<?>> diskTempCollectors = new ArrayList<>();
     diskTempCollectors.add(new DiskCollector());

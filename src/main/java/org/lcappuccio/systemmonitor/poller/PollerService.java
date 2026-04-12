@@ -151,6 +151,16 @@ public class PollerService {
         setIfPresent("Memory.Total", formatBytes(mem.memTotalBytes()));
         setIfPresent("Memory.Swap Used", formatBytes(mem.swapUsedBytes()));
       });
+    } else if (metrics instanceof org.lcappuccio.systemmonitor.model.FileSystemMetrics fs) {
+      Platform.runLater(() -> {
+        for (var entry : fs.usage().entrySet()) {
+          String mount = entry.getKey();
+          var usage = entry.getValue();
+          String value = formatBytes(usage.usedBytes()) + " / "
+              + formatBytes(usage.totalBytes());
+          setIfPresent("Filesystems." + mount, value);
+        }
+      });
     }
   }
 
