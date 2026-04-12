@@ -29,14 +29,14 @@ Colors are tied to hardware component, not metric. Consistent across all charts.
 
 | Component | Color | JavaFX CSS |
 |---|---|---|
-| CPU | Blue | `#2196F3` |
+| CPU | Blue | `#0A6FC2` |
 | GPU junction | Red | `#F44336` |
 | VRAM | Orange | `#FF9800` |
 | NVMe | Gray | `#9E9E9E` |
 | SSD | Dark gray | `#607D8B` |
-| RAM used | Blue | `#2196F3` |
+| RAM used | Blue | `#0A6FC2` |
 | Swap used | Purple | `#9C27B0` |
-| Core 0–7 | Blue shades | `#1565C0` → `#90CAF9` |
+| Core 0–7 | Blue shades | `#0A305C` → `#E8F2FC` |
 
 ---
 
@@ -95,27 +95,29 @@ List<ChartGroup> groups = List.of(
         "Temperature (°C)",
         List.of("CPU.Temperature", "GPU.Temperature", "GPU.VRAM Temperature",
                 "Disks.NVMe Temperature", "Disks.SSD Temperature"),
-        List.of("#2196F3", "#F44336", "#FF9800", "#9E9E9E", "#607D8B"),
+        List.of("#0A6FC2", "#F44336", "#FF9800", "#9E9E9E", "#607D8B"),
         List.of("CPU", "GPU", "VRAM", "NVMe", "SSD")
     ),
     new ChartGroup(
         "Load (%)",
         List.of("CPU.Load", "GPU.Load", "GPU.VRAM Load"),
-        List.of("#2196F3", "#F44336", "#FF9800"),
+        List.of("#0A6FC2", "#F44336", "#FF9800"),
         List.of("CPU", "GPU", "VRAM")
     ),
     new ChartGroup(
         "Memory (GB)",
         List.of("Memory.Used", "Memory.Swap Used"),
-        List.of("#2196F3", "#9C27B0"),
+        List.of("#0A6FC2", "#9C27B0"),
         List.of("RAM", "Swap")
     ),
     new ChartGroup(
         "Frequencies (GHz)",
         List.of("CPU.Core 0", "CPU.Core 1", "CPU.Core 2", "CPU.Core 3",
                 "CPU.Core 4", "CPU.Core 5", "CPU.Core 6", "CPU.Core 7"),
-        List.of("#1565C0", "#1976D2", "#1E88E5", "#2196F3",
-                "#42A5F5", "#64B5F6", "#90CAF9", "#BBDEFB"),
+        List.of("#0A305C", "#0D3C73", "#0F488A", "#1254A1",
+                "#1461B8", "#176DCF", "#176DCF", "#3086E8", 
+                "#4794EB", "#5EA1ED", "#75AEF0". "#8CBCF2", 
+                "#A3C9F5", "#BAD7F7", "#D1E4FA", "#E8F2FC"),
         List.of("Core 0", "Core 1", "Core 2", "Core 3",
                 "Core 4", "Core 5", "Core 6", "Core 7")
     )
