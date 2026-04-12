@@ -2,13 +2,18 @@ package org.lcappuccio.systemmonitor.ui;
 
 import java.util.ArrayList;
 import java.util.List;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
 import javafx.scene.Parent;
+import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.BorderPane;
+import javafx.util.Duration;
 import org.lcappuccio.systemmonitor.collectors.Collector;
 import org.lcappuccio.systemmonitor.collectors.CpuCollector;
 import org.lcappuccio.systemmonitor.collectors.DiskCollector;
@@ -35,10 +40,13 @@ public class MainWindow {
   private static final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
   private static final double DIVIDER_POSITION = 0.30;
 
-  private final SplitPane root;
+  private final ChartPanel chartPanel;
+  private final Label heapLabel = new Label();
   private final ObservableList<MetricRow> rows;
   private final PollerService pollerService;
-  private final ChartPanel chartPanel;
+  private final SplitPane root;
+
+  private Timeline heapTimer;
 
   /**
    * Constructs the main window with the given application configuration.
@@ -55,9 +63,15 @@ public class MainWindow {
 
     TableView<MetricRow> table = buildTable();
 
-    root = new SplitPane(table, chartPanel.getRoot());
+    BorderPane leftPane = new BorderPane();
+    leftPane.setCenter(table);
+    leftPane.setBottom(buildStatusBar());
+
+    root = new SplitPane(leftPane, chartPanel.getRoot());
     root.setOrientation(Orientation.HORIZONTAL);
     root.setDividerPositions(DIVIDER_POSITION);
+
+    startHeapMonitor();
 
     this.pollerService = createPollerService(config);
     this.pollerService.start();
@@ -101,6 +115,9 @@ public class MainWindow {
     }
     if (chartPanel != null) {
       chartPanel.shutdown();
+    }
+    if (heapTimer != null) {
+      heapTimer.stop();
     }
   }
 
@@ -176,5 +193,26 @@ public class MainWindow {
     CpuCollector tempCollector = new CpuCollector();
     tempCollector.initialize();
     return tempCollector.getCoreIds();
+  }
+
+  private javafx.scene.layout.HBox buildStatusBar() {
+    heapLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #0E0E0E; -fx-padding: 2 6 2 6;");
+    updateHeapLabel();
+    javafx.scene.layout.HBox bar = new javafx.scene.layout.HBox(heapLabel);
+    bar.setStyle("-fx-border-color: #cccccc; -fx-border-width: 1 0 0 0;");
+    return bar;
+  }
+
+  private void startHeapMonitor() {
+    heapTimer = new Timeline(new KeyFrame(Duration.seconds(5), e -> updateHeapLabel()));
+    heapTimer.setCycleCount(javafx.animation.Animation.INDEFINITE);
+    heapTimer.play();
+  }
+
+  private void updateHeapLabel() {
+    Runtime rt = Runtime.getRuntime();
+    long used = (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024);
+    long max = rt.maxMemory() / (1024 * 1024);
+    heapLabel.setText("JVM Heap: " + used + " MB / " + max + " MB");
   }
 }

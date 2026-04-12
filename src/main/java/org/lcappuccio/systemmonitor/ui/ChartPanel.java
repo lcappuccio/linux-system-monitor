@@ -164,8 +164,8 @@ public class ChartPanel {
   private LineChart<Number, Number> buildChart(ChartGroup group) {
     NumberAxis axisX = new NumberAxis();
     axisX.setAutoRanging(true);
-    axisX.setTickLabelsVisible(false);
-    axisX.setTickMarkVisible(false);
+    axisX.setTickLabelsVisible(true);
+    axisX.setTickMarkVisible(true);
 
     NumberAxis axisY = new NumberAxis();
     axisY.setAutoRanging(true);
@@ -176,6 +176,12 @@ public class ChartPanel {
     chart.setCreateSymbols(false);
     chart.setLegendVisible(true);
     chart.setMinHeight(CHART_MIN_HEIGHT);
+
+    // Inject CSS before adding series — applied on first layout pass, no timing issues
+    String css = buildChartCss(group);
+    chart.getStylesheets().add(
+        "data:text/css," + java.net.URLEncoder.encode(
+            css, java.nio.charset.StandardCharsets.UTF_8).replace("+", "%20"));
 
     for (int i = 0; i < group.metricKeys().size(); i++) {
       String key = group.metricKeys().get(i);
@@ -188,6 +194,20 @@ public class ChartPanel {
     }
 
     return chart;
+  }
+
+  private String buildChartCss(ChartGroup group) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < group.seriesColors().size(); i++) {
+      String color = group.seriesColors().get(i);
+      sb.append(".default-color").append(i)
+          .append(".chart-series-line { -fx-stroke: ").append(color)
+          .append("; -fx-stroke-width: 1.5px; }\n");
+      sb.append(".default-color").append(i)
+          .append(".chart-legend-item-symbol { -fx-background-color: ").append(color)
+          .append(", white; }\n");
+    }
+    return sb.toString();
   }
 
   private void subscribeToRows(ObservableList<MetricRow> rows) {

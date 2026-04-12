@@ -5,7 +5,6 @@ target/
 .idea/
 .vscode/
 *.DS_Store
-dependency-reduced-pom.xml
 .classpath
 .project
 .settings/

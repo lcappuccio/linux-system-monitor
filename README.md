@@ -23,6 +23,8 @@ leo ALL=(ALL) NOPASSWD: /usr/sbin/smartctl
 
 ```bash
 mvn checkstyle:check sonar:sonar -Psonar
+
+mvn clean javafx:jlink
 ```
 
 ## Run
@@ -31,8 +33,11 @@ mvn checkstyle:check sonar:sonar -Psonar
 # Development
 mvn javafx:run
 
-# From fat jar
-java -jar target/linux-system-monitor-0.1.0-SNAPSHOT.jar
+# Packaged
+./target/linux-system-monitor-1.0.0/bin/linux-system-monitor
+
+# Distribution
+./target/linux-system-monitor.zip
 ```
 
 ## Monitored Metrics
