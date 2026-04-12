@@ -209,6 +209,15 @@ public class PollerService {
           setIfPresent("Filesystems." + mount, usedStr + " / " + freeStr + " / " + totalStr);
         }
       });
+    } else if (metrics instanceof org.lcappuccio.systemmonitor.model.DiskMetrics disk) {
+      Platform.runLater(() -> {
+        String nvmeStr = Double.isNaN(disk.nvmeTempCelsius())
+            ? "N/A" : String.format("%.1f°C", disk.nvmeTempCelsius());
+        String sataStr = Double.isNaN(disk.sataTempCelsius())
+            ? "N/A" : String.format("%.1f°C", disk.sataTempCelsius());
+        setIfPresent("Disks.NVMe Temperature", nvmeStr);
+        setIfPresent("Disks.SSD Temperature", sataStr);
+      });
     }
   }
 

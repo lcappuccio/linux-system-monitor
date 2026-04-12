@@ -73,7 +73,7 @@ public class MainWindow {
     filesystemCollectors.add(new FileSystemCollector(config));
 
     List<Collector<?>> diskTempCollectors = new ArrayList<>();
-    diskTempCollectors.add(new DiskCollector());
+    diskTempCollectors.add(new DiskCollector(config));
 
     return new PollerService(config, rows, defaultCollectors, filesystemCollectors,
         diskTempCollectors);
