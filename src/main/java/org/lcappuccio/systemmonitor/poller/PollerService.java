@@ -173,6 +173,29 @@ public class PollerService {
           setIfPresent("CPU.Core " + i, String.format("%.2f GHz", ghz));
         }
       });
+    } else if (metrics instanceof org.lcappuccio.systemmonitor.model.GpuMetrics gpu) {
+      Platform.runLater(() -> {
+        String tempStr;
+        if (Double.isNaN(gpu.temperatureCelsius())) {
+          tempStr = "N/A";
+        } else {
+          tempStr = String.format("%.1f°C", gpu.temperatureCelsius());
+        }
+        setIfPresent("GPU.Temperature", tempStr);
+        setIfPresent("GPU.Load", String.format("%.0f%%", gpu.loadPercent()));
+        String vramUsedStr = formatBytes(gpu.vramUsedBytes());
+        String vramTotalStr = formatBytes(gpu.vramTotalBytes());
+        setIfPresent("GPU.VRAM Used", vramUsedStr + " / " + vramTotalStr);
+        String vramTempStr;
+        if (Double.isNaN(gpu.vramTemperatureCelsius())) {
+          vramTempStr = "N/A";
+        } else {
+          vramTempStr = String.format("%.1f°C", gpu.vramTemperatureCelsius());
+        }
+        setIfPresent("GPU.VRAM Temperature", vramTempStr);
+        setIfPresent("GPU.VRAM Load", String.format("%.0f%%", gpu.vramLoadPercent()));
+        setIfPresent("GPU.Power", String.format("%.1f W", gpu.powerWatts()));
+      });
     } else if (metrics instanceof org.lcappuccio.systemmonitor.model.FileSystemMetrics fs) {
       Platform.runLater(() -> {
         for (var entry : fs.usage().entrySet()) {
