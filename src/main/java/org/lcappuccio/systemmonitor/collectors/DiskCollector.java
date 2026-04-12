@@ -109,7 +109,7 @@ public class DiskCollector implements Collector<DiskMetrics> {
     try {
       String content = Files.readString(Paths.get(nvmeTempPath)).trim();
       return Double.parseDouble(content) / 1000.0;
-    } catch (Exception e) {
+    } catch (IOException | NumberFormatException e) {
       LOG.debug("Failed to read NVMe temp: {}", e.getMessage());
       return NO_TEMP;
     }
@@ -142,7 +142,7 @@ public class DiskCollector implements Collector<DiskMetrics> {
           }
         }
       }
-    } catch (Exception e) {
+    } catch (IOException | InterruptedException e) {
       LOG.debug("Failed to read SATA temp: {}", e.getMessage());
     } finally {
       if (process != null && process.isAlive()) {

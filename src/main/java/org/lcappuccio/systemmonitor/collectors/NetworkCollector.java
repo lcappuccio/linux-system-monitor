@@ -54,7 +54,7 @@ public class NetworkCollector implements Collector<NetworkMetrics> {
     try {
       NetworkInterface ni = NetworkInterface.getByName(interfaceName);
       return ni != null;
-    } catch (Exception e) {
+    } catch (IOException e) {
       LOG.error("Failed to check interface {}: {}", interfaceName, e.getMessage());
       return false;
     }
@@ -96,7 +96,7 @@ public class NetworkCollector implements Collector<NetworkMetrics> {
           linkSpeed,
           uploadRate,
           downloadRate));
-    } catch (Exception e) {
+    } catch (IOException e) {
       LOG.error("Failed to collect network metrics: {}", e.getMessage());
       return Optional.empty();
     }
@@ -117,7 +117,7 @@ public class NetworkCollector implements Collector<NetworkMetrics> {
         }
       }
       return "N/A";
-    } catch (Exception e) {
+    } catch (IOException e) {
       LOG.warn("Failed to get IP address: {}", e.getMessage());
       return "N/A";
     }
@@ -128,7 +128,7 @@ public class NetworkCollector implements Collector<NetworkMetrics> {
     try {
       String content = Files.readString(path).trim();
       return Integer.parseInt(content);
-    } catch (Exception e) {
+    } catch (IOException e) {
       LOG.debug("Failed to read link speed for {}: {}", interfaceName, e.getMessage());
       return 0;
     }

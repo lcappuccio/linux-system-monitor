@@ -85,7 +85,7 @@ public class FileSystemCollector implements Collector<FileSystemMetrics> {
           if (usage != null) {
             usageMap.put(mountPoint, usage);
           }
-        } catch (Exception e) {
+        } catch (IOException e) {
           LOG.error("Failed to read mount point {}: {}", mountPoint, e.getMessage());
         }
       }
@@ -95,7 +95,7 @@ public class FileSystemCollector implements Collector<FileSystemMetrics> {
       }
 
       return Optional.of(new FileSystemMetrics(usageMap));
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       LOG.error("Failed to collect filesystem metrics: {}", e.getMessage());
       return Optional.empty();
     }

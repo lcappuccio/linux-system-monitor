@@ -129,7 +129,7 @@ public class CpuCollector implements Collector<CpuMetrics> {
       List<Double> frequencies = readFrequencies();
 
       return Optional.of(new CpuMetrics(temperature, load, frequencies));
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       LOG.error("Failed to collect CPU metrics: {}", e.getMessage());
       return Optional.empty();
     }
@@ -142,7 +142,7 @@ public class CpuCollector implements Collector<CpuMetrics> {
     try {
       String content = Files.readString(Paths.get(tempInputPath)).trim();
       return Double.parseDouble(content) / 1000.0;
-    } catch (Exception e) {
+    } catch (IOException e) {
       LOG.debug("Failed to read temperature: {}", e.getMessage());
       return NO_TEMP;
     }
@@ -221,7 +221,7 @@ public class CpuCollector implements Collector<CpuMetrics> {
         String content = Files.readString(freqFile).trim();
         return Double.parseDouble(content) / 1_000_000.0;
       }
-    } catch (Exception e) {
+    } catch (IOException e) {
       LOG.debug("Failed to read freq for cpu{}: {}", coreId, e.getMessage());
     }
     return 0.0;

@@ -38,7 +38,7 @@ public class MemoryCollector implements Collector<MemoryMetrics> {
     }
     try {
       return Optional.of(readMemoryMetrics());
-    } catch (Exception e) {
+    } catch (IOException e) {
       LOG.error("Failed to collect memory metrics: {}", e.getMessage());
       return Optional.empty();
     }

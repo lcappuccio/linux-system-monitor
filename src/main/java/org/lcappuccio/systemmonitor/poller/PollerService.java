@@ -118,7 +118,7 @@ public class PollerService {
     for (Collector<?> collector : defaultCollectors) {
       try {
         collector.collect().ifPresent(metrics -> updateRows(collector.getName(), metrics));
-      } catch (Exception e) {
+      } catch (RuntimeException e) {
         LOG.error("Error collecting {}: {}", collector.getName(), e.getMessage());
       }
     }
@@ -128,7 +128,7 @@ public class PollerService {
     for (Collector<?> collector : filesystemCollectors) {
       try {
         collector.collect().ifPresent(metrics -> updateRows(collector.getName(), metrics));
-      } catch (Exception e) {
+      } catch (RuntimeException e) {
         LOG.error("Error collecting {}: {}", collector.getName(), e.getMessage());
       }
     }
@@ -138,7 +138,7 @@ public class PollerService {
     for (Collector<?> collector : diskTempCollectors) {
       try {
         collector.collect().ifPresent(metrics -> updateRows(collector.getName(), metrics));
-      } catch (Exception e) {
+      } catch (RuntimeException e) {
         LOG.error("Error collecting {}: {}", collector.getName(), e.getMessage());
       }
     }

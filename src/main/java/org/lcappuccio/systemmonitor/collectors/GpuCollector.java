@@ -144,7 +144,7 @@ public class GpuCollector implements Collector<GpuMetrics> {
           vramLoad,
           power,
           fan));
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       LOG.error("Failed to collect GPU metrics: {}", e.getMessage());
       return Optional.empty();
     }
@@ -158,7 +158,7 @@ public class GpuCollector implements Collector<GpuMetrics> {
       String content = Files.readString(Paths.get(path)).trim();
       double millidegrees = Double.parseDouble(content);
       return millidegrees / 1000.0;
-    } catch (Exception e) {
+    } catch (IOException e) {
       LOG.debug("Failed to read temperature from {}: {}", path, e.getMessage());
       return NO_TEMP;
     }
@@ -171,7 +171,7 @@ public class GpuCollector implements Collector<GpuMetrics> {
     try {
       String content = Files.readString(Paths.get(powerPath)).trim();
       return Double.parseDouble(content) / 1_000_000.0;
-    } catch (Exception e) {
+    } catch (IOException e) {
       LOG.debug("Failed to read power: {}", e.getMessage());
       return 0.0;
     }
@@ -184,7 +184,7 @@ public class GpuCollector implements Collector<GpuMetrics> {
     try {
       String content = Files.readString(Paths.get(fanPath)).trim();
       return Double.parseDouble(content);
-    } catch (Exception e) {
+    } catch (IOException e) {
       LOG.debug("Failed to read fan: {}", e.getMessage());
       return 0.0;
     }
@@ -200,7 +200,7 @@ public class GpuCollector implements Collector<GpuMetrics> {
         String content = Files.readString(path).trim();
         return Double.parseDouble(content);
       }
-    } catch (Exception e) {
+    } catch (IOException e) {
       LOG.debug("Failed to read {}: {}", name, e.getMessage());
     }
     return 0.0;
@@ -219,7 +219,7 @@ public class GpuCollector implements Collector<GpuMetrics> {
         if (Files.exists(totalPath)) {
           total = Long.parseLong(Files.readString(totalPath).trim());
         }
-      } catch (Exception e) {
+      } catch (IOException e) {
         LOG.debug("Failed to read VRAM usage: {}", e.getMessage());
       }
     }
