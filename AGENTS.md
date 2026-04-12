@@ -91,6 +91,7 @@ mvn checkstyle:check sonar:sonar -Psonar
 - Do not block the JavaFX Application Thread.
 - Do not add dependencies without discussing first.
 - Do not target Windows or macOS.
+- Do not commit changes to build.yml unless with explicit approval.
 
 ## Strict Prohibitions
 
