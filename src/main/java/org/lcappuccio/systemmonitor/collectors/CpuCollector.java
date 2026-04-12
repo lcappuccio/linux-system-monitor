@@ -78,13 +78,12 @@ public class CpuCollector implements Collector<CpuMetrics> {
   }
 
   private void discoverHwmon() {
-    try {
-      Path hwmonDir = Paths.get(HWMON_PATH);
-      if (!Files.exists(hwmonDir)) {
-        return;
-      }
+    Path hwmonDir = Paths.get(HWMON_PATH);
+    if (!Files.exists(hwmonDir)) {
+      return;
+    }
 
-      DirectoryStream<Path> stream = Files.newDirectoryStream(hwmonDir, "hwmon*");
+    try (DirectoryStream<Path> stream = Files.newDirectoryStream(hwmonDir, "hwmon*")) {
       for (Path hwmon : stream) {
         Path nameFile = hwmon.resolve("name");
         if (Files.exists(nameFile)) {
@@ -102,8 +101,7 @@ public class CpuCollector implements Collector<CpuMetrics> {
   }
 
   private void findTempSensor(Path hwmon) {
-    try {
-      DirectoryStream<Path> stream = Files.newDirectoryStream(hwmon, "temp*_label");
+    try (DirectoryStream<Path> stream = Files.newDirectoryStream(hwmon, "temp*_label")) {
       for (Path labelFile : stream) {
         String label = Files.readString(labelFile).trim();
         if (label.contains("Tctl")) {

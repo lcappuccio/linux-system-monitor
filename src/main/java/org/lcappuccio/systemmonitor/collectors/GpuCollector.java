@@ -72,15 +72,16 @@ public class GpuCollector implements Collector<GpuMetrics> {
         return;
       }
 
-      DirectoryStream<Path> stream = Files.newDirectoryStream(hwmonDir, "hwmon*");
-      for (Path hwmon : stream) {
-        Path nameFile = hwmon.resolve("name");
-        if (Files.exists(nameFile)) {
-          String name = Files.readString(nameFile).trim();
-          if ("amdgpu".equals(name)) {
-            hwmonPath = hwmon.toString();
-            findSensors(hwmon);
-            return;
+      try (DirectoryStream<Path> stream = Files.newDirectoryStream(hwmonDir, "hwmon*")) {
+        for (Path hwmon : stream) {
+          Path nameFile = hwmon.resolve("name");
+          if (Files.exists(nameFile)) {
+            String name = Files.readString(nameFile).trim();
+            if ("amdgpu".equals(name)) {
+              hwmonPath = hwmon.toString();
+              findSensors(hwmon);
+              return;
+            }
           }
         }
       }
@@ -90,8 +91,7 @@ public class GpuCollector implements Collector<GpuMetrics> {
   }
 
   private void findSensors(Path hwmon) {
-    try {
-      DirectoryStream<Path> stream = Files.newDirectoryStream(hwmon, "temp*_label");
+    try (DirectoryStream<Path> stream = Files.newDirectoryStream(hwmon, "temp*_label")) {
       for (Path labelFile : stream) {
         String label = Files.readString(labelFile).trim();
         String num = labelFile.getFileName().toString().split("_")[0];

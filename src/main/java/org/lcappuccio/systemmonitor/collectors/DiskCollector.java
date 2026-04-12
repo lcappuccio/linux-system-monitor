@@ -54,13 +54,12 @@ public class DiskCollector implements Collector<DiskMetrics> {
   }
 
   private void discoverNvmeHwmon() {
-    try {
-      Path hwmonDir = Paths.get(HWMON_PATH);
-      if (!Files.exists(hwmonDir)) {
-        return;
-      }
+    Path hwmonDir = Paths.get(HWMON_PATH);
+    if (!Files.exists(hwmonDir)) {
+      return;
+    }
 
-      DirectoryStream<Path> stream = Files.newDirectoryStream(hwmonDir, "hwmon*");
+    try (DirectoryStream<Path> stream = Files.newDirectoryStream(hwmonDir, "hwmon*")) {
       for (Path hwmon : stream) {
         Path nameFile = hwmon.resolve("name");
         if (Files.exists(nameFile)) {
