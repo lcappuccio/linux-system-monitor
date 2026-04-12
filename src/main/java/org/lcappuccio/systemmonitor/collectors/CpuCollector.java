@@ -63,7 +63,9 @@ public class CpuCollector implements Collector<CpuMetrics> {
         if (name.startsWith("cpu") && Files.isDirectory(entry)) {
           try {
             int id = Integer.parseInt(name.substring(3));
-            coreIds.add(id);
+            if (id % 2 == 0) {
+              coreIds.add(id);
+            }
           } catch (NumberFormatException e) {
             // skip non-cpu directories
           }
@@ -158,15 +160,15 @@ public class CpuCollector implements Collector<CpuMetrics> {
       return 0.0;
     }
 
-    prevTotalJiffies = total;
-    prevIdleJiffies = idle;
-
     if (total <= prevTotalJiffies) {
       return 0.0;
     }
 
     long totalDelta = total - prevTotalJiffies;
     long idleDelta = idle - prevIdleJiffies;
+
+    prevTotalJiffies = total;
+    prevIdleJiffies = idle;
 
     return Math.min(100.0, ((double) (totalDelta - idleDelta) / totalDelta) * 100.0);
   }
@@ -180,13 +182,13 @@ public class CpuCollector implements Collector<CpuMetrics> {
       while ((line = reader.readLine()) != null) {
         if (line.startsWith("cpu ")) {
           String[] parts = line.split("\\s+");
-          if (parts.length >= 5) {
+          if (parts.length >= 8) {
             for (int i = 1; i < parts.length; i++) {
               try {
                 long val = Long.parseLong(parts[i]);
                 total += val;
-                if (i == 4) {
-                  idle = val;
+                if (i == 4 || i == 5) {
+                  idle += val;
                 }
               } catch (NumberFormatException e) {
                 // skip
