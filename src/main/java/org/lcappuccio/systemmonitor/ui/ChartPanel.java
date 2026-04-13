@@ -101,45 +101,52 @@ public class ChartPanel {
   private List<ChartGroup> buildGroups(ObservableList<MetricRow> rows) {
     List<ChartGroup> groups = new ArrayList<>();
 
-    groups.add(new ChartGroup(
-        "Temperature (°C)",
-        List.of("CPU.Temperature", "GPU.Temperature", "GPU.VRAM Temperature",
-            "Disks.NVMe Temperature", "Disks.SSD Temperature"),
-        List.of(appConfig.getColorCpu(), appConfig.getColorGpu(), appConfig.getColorVram(),
-            appConfig.getColorNvme(), appConfig.getColorSata()),
-        List.of("CPU", "GPU", "VRAM", "NVMe", "SSD")
-    ));
-    groups.add(new ChartGroup(
-        "Load (%)",
-        List.of("CPU.Load", "GPU.Load", "GPU.VRAM Load"),
-        List.of(appConfig.getColorCpu(), appConfig.getColorGpu(), appConfig.getColorVram()),
-        List.of("CPU", "GPU", "VRAM")
-    ));
-    groups.add(new ChartGroup(
-        "Memory (GB)",
-        List.of("Memory.Used", "Memory.Swap Used"),
-        List.of(appConfig.getColorMemoryUsed(), appConfig.getColorSwapUsed()),
-        List.of("RAM", "Swap")
-    ));
-
-    // Frequencies — dynamic: only add cores that exist in rows
-    List<String> coreKeys = new ArrayList<>();
-    List<String> coreColors = new ArrayList<>();
-    List<String> coreLabels = new ArrayList<>();
-    List<String> colorCpuClocks = appConfig.getColorCpuClocks();
-
-    for (int i = 0; i < 8; i++) {
-      String key = "CPU.Core " + i;
-      boolean exists = rows.stream().anyMatch(r -> (r.getSection() + "."
-          + r.getMetric()).equals(key));
-      if (exists) {
-        coreKeys.add(key);
-        coreColors.add(colorCpuClocks.get(i % colorCpuClocks.size()));
-        coreLabels.add("Core " + i);
-      }
+    if (appConfig.isChartCpuEnabled()) {
+      groups.add(new ChartGroup(
+          "Temperature (°C)",
+          List.of("CPU.Temperature", "GPU.Temperature", "GPU.VRAM Temperature",
+              "Disks.NVMe Temperature", "Disks.SSD Temperature"),
+          List.of(appConfig.getColorCpu(), appConfig.getColorGpu(), appConfig.getColorVram(),
+              appConfig.getColorNvme(), appConfig.getColorSata()),
+          List.of("CPU", "GPU", "VRAM", "NVMe", "SSD")
+      ));
     }
-    if (!coreKeys.isEmpty()) {
-      groups.add(new ChartGroup("Frequencies (GHz)", coreKeys, coreColors, coreLabels));
+    if (appConfig.isChartLoadEnabled()) {
+      groups.add(new ChartGroup(
+          "Load (%)",
+          List.of("CPU.Load", "GPU.Load", "GPU.VRAM Load"),
+          List.of(appConfig.getColorCpu(), appConfig.getColorGpu(), appConfig.getColorVram()),
+          List.of("CPU", "GPU", "VRAM")
+      ));
+    }
+    if (appConfig.isChartMemoryEnabled()) {
+      groups.add(new ChartGroup(
+          "Memory (GB)",
+          List.of("Memory.Used", "Memory.Swap Used"),
+          List.of(appConfig.getColorMemoryUsed(), appConfig.getColorSwapUsed()),
+          List.of("RAM", "Swap")
+      ));
+    }
+    if (appConfig.isChartFrequencyEnabled()) {
+      // Frequencies — dynamic: only add cores that exist in rows
+      List<String> coreKeys = new ArrayList<>();
+      List<String> coreColors = new ArrayList<>();
+      List<String> coreLabels = new ArrayList<>();
+      List<String> colorCpuClocks = appConfig.getColorCpuClocks();
+
+      for (int i = 0; i < 8; i++) {
+        String key = "CPU.Core " + i;
+        boolean exists = rows.stream().anyMatch(r -> (r.getSection() + "."
+            + r.getMetric()).equals(key));
+        if (exists) {
+          coreKeys.add(key);
+          coreColors.add(colorCpuClocks.get(i % colorCpuClocks.size()));
+          coreLabels.add("Core " + i);
+        }
+      }
+      if (!coreKeys.isEmpty()) {
+        groups.add(new ChartGroup("Frequencies (GHz)", coreKeys, coreColors, coreLabels));
+      }
     }
 
     return groups;
