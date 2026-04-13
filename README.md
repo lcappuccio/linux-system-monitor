@@ -65,6 +65,7 @@ On first run, create `~/.config/linux-system-monitor/config.properties`:
 # 300 ticks at 2 seconds per tick will show 10 minutes of history
 history.size=300
 tick.seconds=2
+ui.theme=dark
 
 net.interface=enp9s0
 gpu.drm.path=/sys/class/drm/card1
