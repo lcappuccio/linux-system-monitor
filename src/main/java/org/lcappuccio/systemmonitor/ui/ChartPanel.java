@@ -122,9 +122,9 @@ public class ChartPanel {
     if (appConfig.isChartMemoryEnabled()) {
       groups.add(new ChartGroup(
           "Memory (GB)",
-          List.of("Memory.Used", "Memory.Swap Used"),
-          List.of(appConfig.getColorMemoryUsed(), appConfig.getColorSwapUsed()),
-          List.of("RAM", "Swap")
+          List.of("Memory.Used", "Memory.Swap Used" ,"GPU.VRAM Used"),
+          List.of(appConfig.getColorMemoryUsed(), appConfig.getColorSwapUsed(), appConfig.getColorVram()),
+          List.of("RAM", "Swap", "VRAM")
       ));
     }
     if (appConfig.isChartFrequencyEnabled()) {
