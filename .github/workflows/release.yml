@@ -5,8 +5,7 @@ on:
     inputs:
       bumpType:
         description: 'Version bump'
-        required: true
-        default: 'patch'
+        required: false
         type: choice
         options:
           - patch
@@ -35,11 +34,8 @@ jobs:
         id: version
         run: |
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          VERSION=${VERSION%-SNAPSHOT}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Rename zip with version
-        run: |
-          mv target/linux-system-monitor.zip "target/linux-system-monitor-${VERSION}.zip"
 
       - name: Create Git Tag
         run: |
@@ -53,14 +49,4 @@ jobs:
         with:
           tag_name: v${{ steps.version.outputs.version }}
           name: Release v${{ steps.version.outputs.version }}
-          files: target/linux-system-monitor-${{ steps.version.outputs.version }}.zip
-
-      - name: Bump version
-        if: inputs.bumpType != ''
-        run: |
-          mvn versions:set -DnewVersion=${{ inputs.bumpType }} -DgenerateBackupPequals=false
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add pom.xml
-          git commit -m "Bump version to ${{ inputs.bumpType }}"
-          git push
+          files: target/*.zip
