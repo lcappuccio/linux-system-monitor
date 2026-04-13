@@ -118,4 +118,16 @@ class AppConfigTest {
     assertFalse(config.isChartFrequencyEnabled());
   }
 
+  @Test
+  void isChartSwapEnabled_returnsExpectedValue() {
+    AppConfig config = AppConfig.load();
+    assertFalse(config.isChartFrequencyEnabled());
+  }
+
+  @Test
+  void isDarkModeEnabled_returnsExpectedValue() {
+    AppConfig config = AppConfig.load();
+    assertEquals("light", config.getUiTheme());
+  }
+
 }

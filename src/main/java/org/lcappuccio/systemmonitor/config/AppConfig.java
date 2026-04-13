@@ -31,6 +31,7 @@ public final class AppConfig {
 
   private final int historySize;
   private final double tickSeconds;
+  private final String uiTheme;
 
   private final String netInterface;
   private final String gpuDrmPath;
@@ -59,6 +60,7 @@ public final class AppConfig {
 
     this.historySize = parseInt(props, "history.size", 25);
     this.tickSeconds = Double.parseDouble(props.getProperty("tick.seconds", "2"));
+    this.uiTheme = props.getProperty("ui.theme", "light");
 
     this.netInterface = props.getProperty("net.interface", "enp9s0");
     this.gpuDrmPath = props.getProperty("gpu.drm.path", "/sys/class/drm/card1");
@@ -342,5 +344,14 @@ public final class AppConfig {
    */
   public boolean isChartFrequencyEnabled() {
     return chartFrequencyEnabled;
+  }
+
+  /**
+    * Returns the selected UI theme, e.g. {@code light} or {@code dark}.
+   *
+   * @return the value.
+   */
+  public String getUiTheme() {
+    return uiTheme;
   }
 }
