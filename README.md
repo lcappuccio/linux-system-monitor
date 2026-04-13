@@ -12,9 +12,9 @@ Displays CPU, GPU, memory, storage, filesystem, and network statistics in a live
 
 - JDK 21+
 - Maven 3.9+
-- AMD GPU with `amdgpu` kernel driver
+- working GPU drivers (should be AMD / NVIDIA / Intel agnostic)
 - `lm-sensors` installed and configured
-- `smartctl` and `nvme-cli` installed, with the following sudoers rules:
+- `smartctl` and `nvme-cli` installed, with the following sudoers rules (visudo command to edit):
 
 ```
 leo ALL=(ALL) NOPASSWD: /usr/sbin/nvme
@@ -97,6 +97,17 @@ chart.group.frequencies.enabled=false
 If the file is absent, the application starts with built-in defaults and logs a warning.
 If a configured hardware device or path does not exist, the affected collector is skipped and an error
 is logged — the rest of the application continues normally.
+
+JVM memory usage can be configured with the `-Xmx` flag, e.g. `-Xmx256m` for 256 MB of max heap.
+
+```bash
+vi bin/linux-system-monitor
+
+#!/bin/sh
+JLINK_VM_OPTIONS="--add-opens=javafx.graphics/com.sun.javafx.sg.prism=ALL-UNNAMED -Xms16m -Xmx64m"
+DIR=`dirname $0`
+$DIR/java $JLINK_VM_OPTIONS -m org.lcappuccio.systemmonitor/org.lcappuccio.systemmonitor.Main "$@"
+```
 
 ## Fault Tolerance
 

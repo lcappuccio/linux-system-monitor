@@ -86,7 +86,7 @@
                     <jlinkZipName>linux-system-monitor</jlinkZipName>
                     <jmodsPath>${java.home}/jmods</jmodsPath>
                     <options>
-                        <option>--add-opens=javafx.graphics/com.sun.javafx.sg.prism=ALL-UNNAMED</option>
+                        <option>--add-opens=javafx.graphics/com.sun.javafx.sg.prism=ALL-UNNAMED -Xms16m -Xmx64m</option>
                     </options>
                 </configuration>
             </plugin>
