@@ -17,6 +17,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import org.lcappuccio.systemmonitor.config.AppConfig;
+import org.lcappuccio.systemmonitor.model.MetricKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,8 +105,9 @@ public class ChartPanel {
     if (appConfig.isChartCpuEnabled()) {
       groups.add(new ChartGroup(
           "Temperature (°C)",
-          List.of("CPU.Temperature", "GPU.Temperature", "GPU.VRAM Temperature",
-              "Disks.NVMe Temperature", "Disks.SSD Temperature"),
+          List.of(MetricKey.Cpu.TEMPERATURE.key(), MetricKey.Gpu.TEMPERATURE.key(),
+              MetricKey.Gpu.VRAM_TEMPERATURE.key(), MetricKey.Disk.NVME_TEMPERATURE.key(),
+              MetricKey.Disk.SSD_TEMPERATURE.key()),
           List.of(appConfig.getColorCpu(), appConfig.getColorGpu(), appConfig.getColorVram(),
               appConfig.getColorNvme(), appConfig.getColorSata()),
           List.of("CPU", "GPU", "VRAM", "NVMe", "SSD")
@@ -114,7 +116,8 @@ public class ChartPanel {
     if (appConfig.isChartLoadEnabled()) {
       groups.add(new ChartGroup(
           "Load (%)",
-          List.of("CPU.Load", "GPU.Load", "GPU.VRAM Load"),
+          List.of(MetricKey.Cpu.LOAD.key(), MetricKey.Gpu.LOAD.key(),
+              MetricKey.Gpu.VRAM_LOAD.key()),
           List.of(appConfig.getColorCpu(), appConfig.getColorGpu(), appConfig.getColorVram()),
           List.of("CPU", "GPU", "VRAM")
       ));
@@ -122,21 +125,21 @@ public class ChartPanel {
     if (appConfig.isChartMemoryEnabled()) {
       groups.add(new ChartGroup(
           "Memory (GB)",
-          List.of("Memory.Used", "Memory.Swap Used", "GPU.VRAM Used"),
+          List.of(MetricKey.Mem.USED.key(), MetricKey.Mem.SWAP_USED.key(),
+              MetricKey.Gpu.VRAM_USED.key()),
           List.of(appConfig.getColorMemoryUsed(), appConfig.getColorSwapUsed(),
               appConfig.getColorVram()),
           List.of("RAM", "Swap", "VRAM")
       ));
     }
     if (appConfig.isChartFrequencyEnabled()) {
-      // Frequencies — dynamic: only add cores that exist in rows
       List<String> coreKeys = new ArrayList<>();
       List<String> coreColors = new ArrayList<>();
       List<String> coreLabels = new ArrayList<>();
       List<String> colorCpuClocks = appConfig.getColorCpuClocks();
 
       for (int i = 0; i < 8; i++) {
-        String key = "CPU.Core " + i;
+        String key = MetricKey.CPU.key("Core " + i);
         boolean exists = rows.stream().anyMatch(r -> (r.getSection() + "."
             + r.getMetric()).equals(key));
         if (exists) {

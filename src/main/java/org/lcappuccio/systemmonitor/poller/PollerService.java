@@ -9,6 +9,7 @@ import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import org.lcappuccio.systemmonitor.collectors.Collector;
 import org.lcappuccio.systemmonitor.config.AppConfig;
+import org.lcappuccio.systemmonitor.model.MetricKey;
 import org.lcappuccio.systemmonitor.ui.MetricRow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,16 +128,18 @@ public class PollerService {
   private void updateRows(String section, Object metrics) {
     if (metrics instanceof org.lcappuccio.systemmonitor.model.MemoryMetrics mem) {
       Platform.runLater(() -> {
-        setIfPresent("Memory.Used", formatBytesMemory(mem.memUsedBytes()) + " / "
+        setIfPresent(MetricKey.Mem.USED.key(), formatBytesMemory(mem.memUsedBytes()) + " / "
             + formatBytesMemory(mem.memTotalBytes()));
-        setIfPresent("Memory.Swap Used", formatBytesMemory(mem.swapUsedBytes()));
+        setIfPresent(MetricKey.Mem.SWAP_USED.key(), formatBytesMemory(mem.swapUsedBytes()));
       });
     } else if (metrics instanceof org.lcappuccio.systemmonitor.model.NetworkMetrics net) {
       Platform.runLater(() -> {
-        setIfPresent("Network.IP Address", net.ipAddress());
-        setIfPresent("Network.Link Speed", net.linkSpeedMbps() + " Mbps");
-        setIfPresent("Network.Upload", formatNetworkBitsPerSec(net.uploadBytesPerSec()));
-        setIfPresent("Network.Download", formatNetworkBitsPerSec(net.downloadBytesPerSec()));
+        setIfPresent(MetricKey.Net.IP_ADDRESS.key(), net.ipAddress());
+        setIfPresent(MetricKey.Net.LINK_SPEED.key(), net.linkSpeedMbps() + " Mbps");
+        setIfPresent(MetricKey.Net.UPLOAD.key(),
+            formatNetworkBitsPerSec(net.uploadBytesPerSec()));
+        setIfPresent(MetricKey.Net.DOWNLOAD.key(),
+            formatNetworkBitsPerSec(net.downloadBytesPerSec()));
       });
     } else if (metrics instanceof org.lcappuccio.systemmonitor.model.CpuMetrics cpu) {
       Platform.runLater(() -> {
@@ -146,11 +149,11 @@ public class PollerService {
         } else {
           tempStr = String.format("%.0f°C", cpu.temperatureCelsius());
         }
-        setIfPresent("CPU.Temperature", tempStr);
-        setIfPresent("CPU.Load", String.format("%.1f%%", cpu.loadPercent()));
+        setIfPresent(MetricKey.Cpu.TEMPERATURE.key(), tempStr);
+        setIfPresent(MetricKey.Cpu.LOAD.key(), String.format("%.1f%%", cpu.loadPercent()));
         for (int i = 0; i < cpu.coreFrequenciesGhz().size(); i++) {
           double ghz = cpu.coreFrequenciesGhz().get(i);
-          setIfPresent("CPU.Core " + i, String.format("%.2f GHz", ghz));
+          setIfPresent(MetricKey.CPU.key("Core " + i), String.format("%.2f GHz", ghz));
         }
       });
     } else if (metrics instanceof org.lcappuccio.systemmonitor.model.GpuMetrics gpu) {
@@ -161,22 +164,22 @@ public class PollerService {
         } else {
           tempStr = String.format("%.0f°C", gpu.temperatureCelsius());
         }
-        setIfPresent("GPU.Temperature", tempStr);
-        setIfPresent("GPU.Load", String.format("%.0f%%", gpu.loadPercent()));
+        setIfPresent(MetricKey.Gpu.TEMPERATURE.key(), tempStr);
+        setIfPresent(MetricKey.Gpu.LOAD.key(), String.format("%.0f%%", gpu.loadPercent()));
         String vramUsedStr = formatBytesMemory(gpu.vramUsedBytes());
         String vramTotalStr = formatBytesMemory(gpu.vramTotalBytes());
-        setIfPresent("GPU.VRAM Used", vramUsedStr + " / " + vramTotalStr);
+        setIfPresent(MetricKey.Gpu.VRAM_USED.key(), vramUsedStr + " / " + vramTotalStr);
         String vramTempStr;
         if (Double.isNaN(gpu.vramTemperatureCelsius())) {
           vramTempStr = "N/A";
         } else {
           vramTempStr = String.format("%.0f°C", gpu.vramTemperatureCelsius());
         }
-        setIfPresent("GPU.VRAM Temperature", vramTempStr);
-        setIfPresent("GPU.VRAM Load", String.format("%.0f%%", gpu.vramLoadPercent()));
-        setIfPresent("GPU.Power", String.format("%.0f W", gpu.powerWatts()));
+        setIfPresent(MetricKey.Gpu.VRAM_TEMPERATURE.key(), vramTempStr);
+        setIfPresent(MetricKey.Gpu.VRAM_LOAD.key(), String.format("%.0f%%", gpu.vramLoadPercent()));
+        setIfPresent(MetricKey.Gpu.POWER.key(), String.format("%.0f W", gpu.powerWatts()));
         int fanRpm = (int) gpu.fanRpm();
-        setIfPresent("GPU.Fan", fanRpm + " RPM");
+        setIfPresent(MetricKey.Gpu.FAN.key(), fanRpm + " RPM");
       });
     } else if (metrics instanceof org.lcappuccio.systemmonitor.model.FileSystemMetrics fs) {
       Platform.runLater(() -> {
@@ -186,7 +189,8 @@ public class PollerService {
           String usedStr = formatBytesFileSystem(usage.usedBytes());
           String freeStr = formatBytesFileSystem(usage.freeBytes());
           String totalStr = formatBytesFileSystem(usage.totalBytes());
-          setIfPresent("Filesystems." + mount, usedStr + " / " + freeStr + " / " + totalStr);
+          setIfPresent(MetricKey.Filesystem.key(mount),
+              usedStr + " / " + freeStr + " / " + totalStr);
         }
       });
     } else if (metrics instanceof org.lcappuccio.systemmonitor.model.DiskMetrics disk) {
@@ -195,8 +199,8 @@ public class PollerService {
             ? "N/A" : String.format("%.0f°C", disk.nvmeTempCelsius());
         String sataStr = Double.isNaN(disk.sataTempCelsius())
             ? "N/A" : String.format("%.0f°C", disk.sataTempCelsius());
-        setIfPresent("Disks.NVMe Temperature", nvmeStr);
-        setIfPresent("Disks.SSD Temperature", sataStr);
+        setIfPresent(MetricKey.Disk.NVME_TEMPERATURE.key(), nvmeStr);
+        setIfPresent(MetricKey.Disk.SSD_TEMPERATURE.key(), sataStr);
       });
     }
   }
