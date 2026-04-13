@@ -2,6 +2,7 @@ package org.lcappuccio.systemmonitor.ui;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.collections.FXCollections;
@@ -70,6 +71,11 @@ public class MainWindow {
     root = new SplitPane(leftPane, chartPanel.getRoot());
     root.setOrientation(Orientation.HORIZONTAL);
     root.setDividerPositions(DIVIDER_POSITION);
+
+    if ("dark".equals(config.getUiTheme())) {
+      root.getStylesheets().add(Objects.requireNonNull(getClass()
+          .getResource("/dark.css")).toExternalForm());
+    }
 
     startHeapMonitor();
 
