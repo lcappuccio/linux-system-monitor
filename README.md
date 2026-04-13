@@ -53,6 +53,22 @@ mvn javafx:run
 | Filesystems | Used/free/total for `/`, `/home`, `/data` |
 | Network | LAN IP, link speed, upload/download rate |
 
+## Installation
+
+```bash
+# Extract
+mkdir -p ~/.local/share/linux-system-monitor
+unzip linux-system-monitor.zip -d ~/.local/share/linux-system-monitor
+
+# Install launcher + icon (user space)
+mkdir -p ~/.local/share/applications ~/.local/share/icons/hicolor/512x512/apps
+cp linux-system-monitor.desktop ~/.local/share/applications/
+cp linux-system-monitor/icon.png ~/.local/share/icons/hicolor/512x512/apps/linux-system-monitor.png
+
+# Refresh desktop database
+update-desktop-database ~/.local/share/applications/
+```
+
 ## Configuration
 
 On first run, create `~/.config/linux-system-monitor/config.properties`:

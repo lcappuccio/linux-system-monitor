@@ -55,7 +55,7 @@ public class ChartPanel {
   /**
    * Constructs a {@code ChartPanel}, builds all chart groups, and subscribes to all rows.
    *
-   * @param rows the observable list of metric rows to monitor
+   * @param rows      the observable list of metric rows to monitor
    * @param appConfig the configuration object
    */
   public ChartPanel(ObservableList<MetricRow> rows, AppConfig appConfig) {
