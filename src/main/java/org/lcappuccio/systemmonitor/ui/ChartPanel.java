@@ -162,7 +162,7 @@ public class ChartPanel {
     axisX.setLowerBound(0);
     axisX.setUpperBound(historySize - 1d);
     axisX.setTickUnit(historySize / 5.0);
-    axisX.setTickLabelsVisible(true);
+    axisX.setTickLabelsVisible(false);
     axisX.setTickMarkVisible(true);
 
     NumberAxis axisY = new NumberAxis();
