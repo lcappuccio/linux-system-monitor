@@ -116,3 +116,7 @@ $DIR/java $JLINK_VM_OPTIONS -m org.lcappuccio.systemmonitor/org.lcappuccio.syste
 ## License
 
 This project is licensed under the GNU General Public License v3.0 — see [LICENSE](LICENSE) for details.
+
+## Reference
+
+JavaFX Darcula CSS theme [darculafx](https://github.com/mouse0w0/darculafx/tree/master)
