@@ -17,8 +17,7 @@ import org.slf4j.LoggerFactory;
  * Service that polls system metric collectors at configured intervals and updates the UI.
  *
  * <p>Uses a {@link ScheduledExecutorService} with separate threads for different polling intervals:
- * default (2s), filesystem (60s), and disk temperature (15s). All UI updates go through
- * {@link Platform#runLater()} to ensure thread safety.
+ * default (2s), filesystem (60s), and disk temperature (15s).
  */
 public class PollerService {
 

@@ -248,7 +248,6 @@ public class ChartPanel {
       XYChart.Series<Number, Number> series = seriesMap.get(key);
       if (series != null) {
         boolean atCapacity = series.getData().size() >= historySize;
-        //series.getNode().setStyle("-fx-stroke: #000000; -fx-stroke-width: 1px;");
         series.getData().add(new XYChart.Data<>(series.getData().size(), value));
         if (atCapacity) {
           series.getData().removeFirst();
