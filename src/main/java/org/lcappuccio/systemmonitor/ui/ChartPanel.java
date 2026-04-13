@@ -156,7 +156,7 @@ public class ChartPanel {
     NumberAxis axisX = new NumberAxis();
     axisX.setAutoRanging(false);
     axisX.setLowerBound(0);
-    axisX.setUpperBound(historySize - 1);
+    axisX.setUpperBound(historySize - 1d);
     axisX.setTickUnit(historySize / 5.0);
     axisX.setTickLabelsVisible(true);
     axisX.setTickMarkVisible(true);
@@ -216,12 +216,12 @@ public class ChartPanel {
   }
 
   private Timeline buildTimeline() {
-    Timeline timeline = new Timeline(new KeyFrame(
+    Timeline tl = new Timeline(new KeyFrame(
         Duration.seconds(tickSeconds),
         e -> onTick()
     ));
-    timeline.setCycleCount(Animation.INDEFINITE);
-    return timeline;
+    tl.setCycleCount(Animation.INDEFINITE);
+    return tl;
   }
 
   private void onTick() {
