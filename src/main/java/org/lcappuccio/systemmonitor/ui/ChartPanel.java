@@ -40,9 +40,6 @@ public class ChartPanel {
 
   private static final int CHART_MIN_HEIGHT = 150;
 
-  /**
-   * Rolling window.
-   */
   private final int historySize;
   private final double tickSeconds;
 
@@ -52,14 +49,7 @@ public class ChartPanel {
   private final Map<String, XYChart.Series<Number, Number>> seriesMap;
   private final Timeline timeline;
 
-  private final String colorCpu;
-  private final String colorGpu;
-  private final String colorVram;
-  private final String colorNvme;
-  private final String colorSata;
-  private final String colorMemoryUsed;
-  private final String colorSwapUsed;
-  private final List<String> colorCpuClocks;
+  private final AppConfig appConfig;
 
   /**
    * Constructs a {@code ChartPanel}, builds all chart groups, and subscribes to all rows.
@@ -77,15 +67,7 @@ public class ChartPanel {
     this.historySize = appConfig.getHistorySize();
     this.tickSeconds = appConfig.getTickSeconds();
     this.timeline = buildTimeline();
-
-    this.colorCpu = appConfig.getColorCpu();
-    this.colorGpu = appConfig.getColorGpu();
-    this.colorVram = appConfig.getColorVram();
-    this.colorNvme = appConfig.getColorNvme();
-    this.colorSata = appConfig.getColorSata();
-    this.colorMemoryUsed = appConfig.getColorMemoryUsed();
-    this.colorSwapUsed = appConfig.getColorSwapUsed();
-    this.colorCpuClocks = appConfig.getColorCpuClocks();
+    this.appConfig = appConfig;
 
     List<ChartGroup> groups = buildGroups(rows);
     for (ChartGroup group : groups) {
@@ -123,19 +105,20 @@ public class ChartPanel {
         "Temperature (°C)",
         List.of("CPU.Temperature", "GPU.Temperature", "GPU.VRAM Temperature",
             "Disks.NVMe Temperature", "Disks.SSD Temperature"),
-        List.of(colorCpu, colorGpu, colorVram, colorNvme, colorSata),
+        List.of(appConfig.getColorCpu(), appConfig.getColorGpu(), appConfig.getColorVram(),
+            appConfig.getColorNvme(), appConfig.getColorSata()),
         List.of("CPU", "GPU", "VRAM", "NVMe", "SSD")
     ));
     groups.add(new ChartGroup(
         "Load (%)",
         List.of("CPU.Load", "GPU.Load", "GPU.VRAM Load"),
-        List.of(colorCpu, colorGpu, colorVram),
+        List.of(appConfig.getColorCpu(), appConfig.getColorGpu(), appConfig.getColorVram()),
         List.of("CPU", "GPU", "VRAM")
     ));
     groups.add(new ChartGroup(
         "Memory (GB)",
         List.of("Memory.Used", "Memory.Swap Used"),
-        List.of(colorMemoryUsed, colorSwapUsed),
+        List.of(appConfig.getColorMemoryUsed(), appConfig.getColorSwapUsed()),
         List.of("RAM", "Swap")
     ));
 
@@ -143,6 +126,7 @@ public class ChartPanel {
     List<String> coreKeys = new ArrayList<>();
     List<String> coreColors = new ArrayList<>();
     List<String> coreLabels = new ArrayList<>();
+    List<String> colorCpuClocks = appConfig.getColorCpuClocks();
 
     for (int i = 0; i < 8; i++) {
       String key = "CPU.Core " + i;
@@ -163,7 +147,10 @@ public class ChartPanel {
 
   private LineChart<Number, Number> buildChart(ChartGroup group) {
     NumberAxis axisX = new NumberAxis();
-    axisX.setAutoRanging(true);
+    axisX.setAutoRanging(false);
+    axisX.setLowerBound(0);
+    axisX.setUpperBound(historySize - 1);
+    axisX.setTickUnit(historySize / 5.0);
     axisX.setTickLabelsVisible(true);
     axisX.setTickMarkVisible(true);
 
