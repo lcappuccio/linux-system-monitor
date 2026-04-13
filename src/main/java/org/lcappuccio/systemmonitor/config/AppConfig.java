@@ -31,6 +31,7 @@ public final class AppConfig {
 
   private final int historySize;
   private final double tickSeconds;
+  private final String uiTheme;
 
   private final String netInterface;
   private final String gpuDrmPath;
@@ -50,18 +51,28 @@ public final class AppConfig {
   private final String colorSwapUsed;
   private final List<String> colorCpuClocks;
 
+  private final boolean chartCpuEnabled;
+  private final boolean chartLoadEnabled;
+  private final boolean chartMemoryEnabled;
+  private final boolean chartFrequencyEnabled;
+
   private AppConfig(Properties props) {
+
+    this.historySize = parseInt(props, "history.size", 25);
+    this.tickSeconds = Double.parseDouble(props.getProperty("tick.seconds", "2"));
+    this.uiTheme = props.getProperty("ui.theme", "light");
+
     this.netInterface = props.getProperty("net.interface", "enp9s0");
     this.gpuDrmPath = props.getProperty("gpu.drm.path", "/sys/class/drm/card1");
     this.diskSataDevice = props.getProperty("disk.sata.device", "/dev/sda");
     this.networkSpeedUnit = props.getProperty("network.speed.unit", "Kbps");
     this.fsMountpoints = Arrays.asList(props.getProperty("fs.mountpoints", "/,/home,/data")
         .split(","));
+
     this.pollIntervalDefault = parseInt(props, "poll.interval.default", 2);
     this.pollIntervalFilesystem = parseInt(props, "poll.interval.filesystem", 60);
     this.pollIntervalDiskTemp = parseInt(props, "poll.interval.disk.temp", 15);
-    this.historySize = parseInt(props, "history.size", 25);
-    this.tickSeconds = Double.parseDouble(props.getProperty("tick.seconds", "2"));
+
     this.colorCpu = props.getProperty("chart.color.cpu", "#0A6FC2");
     this.colorGpu = props.getProperty("chart.color.gpu", "#F44336");
     this.colorVram = props.getProperty("chart.color.vram", "#FF9800");
@@ -72,6 +83,15 @@ public final class AppConfig {
     this.colorCpuClocks = Arrays.asList(props.getProperty("chart.color.cpu.clocks",
         "#0A305C,#0D3C73,#0F488A,#1254A1,#1461B8,#176DCF,#176DCF,#3086E8,#4794EB,"
             + "#5EA1ED,#75AEF0,#8CBCF2,#A3C9F5,#BAD7F7,#D1E4FA,#E8F2FC").split(","));
+
+    this.chartCpuEnabled = Boolean.parseBoolean(props.getProperty(
+        "chart.group.temperature.enabled", "true"));
+    this.chartLoadEnabled = Boolean.parseBoolean(props.getProperty(
+        "chart.group.load.enabled", "true"));
+    this.chartMemoryEnabled = Boolean.parseBoolean(props.getProperty(
+        "chart.group.memory.enabled", "true"));
+    this.chartFrequencyEnabled = Boolean.parseBoolean(props.getProperty(
+        "chart.group.frequencies.enabled", "true"));
   }
 
   /**
@@ -288,5 +308,50 @@ public final class AppConfig {
    */
   public List<String> getColorCpuClocks() {
     return colorCpuClocks;
+  }
+
+  /**
+   * Returns the selected cpu charts enable flag.
+   *
+   * @return the value.
+   */
+  public boolean isChartCpuEnabled() {
+    return chartCpuEnabled;
+  }
+
+  /**
+   * Returns the selected load charts enable flag.
+   *
+   * @return the value.
+   */
+  public boolean isChartLoadEnabled() {
+    return chartLoadEnabled;
+  }
+
+  /**
+   * Returns the selected memory charts enable flag.
+   *
+   * @return the value.
+   */
+  public boolean isChartMemoryEnabled() {
+    return chartMemoryEnabled;
+  }
+
+  /**
+   * Returns the selected cpu frequencies charts enable flag.
+   *
+   * @return the value.
+   */
+  public boolean isChartFrequencyEnabled() {
+    return chartFrequencyEnabled;
+  }
+
+  /**
+    * Returns the selected UI theme, e.g. {@code light} or {@code dark}.
+   *
+   * @return the value.
+   */
+  public String getUiTheme() {
+    return uiTheme;
   }
 }

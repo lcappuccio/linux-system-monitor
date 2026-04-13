@@ -2,6 +2,7 @@ package org.lcappuccio.systemmonitor.ui;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.collections.FXCollections;
@@ -65,11 +66,16 @@ public class MainWindow {
 
     BorderPane leftPane = new BorderPane();
     leftPane.setCenter(table);
-    leftPane.setBottom(buildStatusBar());
+    leftPane.setBottom(buildStatusBar(config));
 
     root = new SplitPane(leftPane, chartPanel.getRoot());
     root.setOrientation(Orientation.HORIZONTAL);
     root.setDividerPositions(DIVIDER_POSITION);
+
+    if ("dark".equals(config.getUiTheme())) {
+      root.getStylesheets().add(Objects.requireNonNull(getClass()
+          .getResource("/dark.css")).toExternalForm());
+    }
 
     startHeapMonitor();
 
@@ -195,8 +201,12 @@ public class MainWindow {
     return tempCollector.getCoreIds();
   }
 
-  private javafx.scene.layout.HBox buildStatusBar() {
-    heapLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #0E0E0E; -fx-padding: 2 6 2 6;");
+  private javafx.scene.layout.HBox buildStatusBar(AppConfig appConfig) {
+    if ("dark".equals(appConfig.getUiTheme())) {
+      heapLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #BBBBBB; -fx-padding: 2 6 2 6;");
+    } else {
+      heapLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #0E0E0E; -fx-padding: 2 6 2 6;");
+    }
     updateHeapLabel();
     javafx.scene.layout.HBox bar = new javafx.scene.layout.HBox(heapLabel);
     bar.setStyle("-fx-border-color: #cccccc; -fx-border-width: 1 0 0 0;");

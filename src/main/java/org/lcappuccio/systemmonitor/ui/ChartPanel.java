@@ -17,6 +17,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import org.lcappuccio.systemmonitor.config.AppConfig;
+import org.lcappuccio.systemmonitor.model.MetricKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,9 +41,6 @@ public class ChartPanel {
 
   private static final int CHART_MIN_HEIGHT = 150;
 
-  /**
-   * Rolling window.
-   */
   private final int historySize;
   private final double tickSeconds;
 
@@ -52,14 +50,7 @@ public class ChartPanel {
   private final Map<String, XYChart.Series<Number, Number>> seriesMap;
   private final Timeline timeline;
 
-  private final String colorCpu;
-  private final String colorGpu;
-  private final String colorVram;
-  private final String colorNvme;
-  private final String colorSata;
-  private final String colorMemoryUsed;
-  private final String colorSwapUsed;
-  private final List<String> colorCpuClocks;
+  private final AppConfig appConfig;
 
   /**
    * Constructs a {@code ChartPanel}, builds all chart groups, and subscribes to all rows.
@@ -77,15 +68,7 @@ public class ChartPanel {
     this.historySize = appConfig.getHistorySize();
     this.tickSeconds = appConfig.getTickSeconds();
     this.timeline = buildTimeline();
-
-    this.colorCpu = appConfig.getColorCpu();
-    this.colorGpu = appConfig.getColorGpu();
-    this.colorVram = appConfig.getColorVram();
-    this.colorNvme = appConfig.getColorNvme();
-    this.colorSata = appConfig.getColorSata();
-    this.colorMemoryUsed = appConfig.getColorMemoryUsed();
-    this.colorSwapUsed = appConfig.getColorSwapUsed();
-    this.colorCpuClocks = appConfig.getColorCpuClocks();
+    this.appConfig = appConfig;
 
     List<ChartGroup> groups = buildGroups(rows);
     for (ChartGroup group : groups) {
@@ -119,43 +102,55 @@ public class ChartPanel {
   private List<ChartGroup> buildGroups(ObservableList<MetricRow> rows) {
     List<ChartGroup> groups = new ArrayList<>();
 
-    groups.add(new ChartGroup(
-        "Temperature (°C)",
-        List.of("CPU.Temperature", "GPU.Temperature", "GPU.VRAM Temperature",
-            "Disks.NVMe Temperature", "Disks.SSD Temperature"),
-        List.of(colorCpu, colorGpu, colorVram, colorNvme, colorSata),
-        List.of("CPU", "GPU", "VRAM", "NVMe", "SSD")
-    ));
-    groups.add(new ChartGroup(
-        "Load (%)",
-        List.of("CPU.Load", "GPU.Load", "GPU.VRAM Load"),
-        List.of(colorCpu, colorGpu, colorVram),
-        List.of("CPU", "GPU", "VRAM")
-    ));
-    groups.add(new ChartGroup(
-        "Memory (GB)",
-        List.of("Memory.Used", "Memory.Swap Used"),
-        List.of(colorMemoryUsed, colorSwapUsed),
-        List.of("RAM", "Swap")
-    ));
-
-    // Frequencies — dynamic: only add cores that exist in rows
-    List<String> coreKeys = new ArrayList<>();
-    List<String> coreColors = new ArrayList<>();
-    List<String> coreLabels = new ArrayList<>();
-
-    for (int i = 0; i < 8; i++) {
-      String key = "CPU.Core " + i;
-      boolean exists = rows.stream().anyMatch(r -> (r.getSection() + "."
-          + r.getMetric()).equals(key));
-      if (exists) {
-        coreKeys.add(key);
-        coreColors.add(colorCpuClocks.get(i % colorCpuClocks.size()));
-        coreLabels.add("Core " + i);
-      }
+    if (appConfig.isChartCpuEnabled()) {
+      groups.add(new ChartGroup(
+          "Temperature (°C)",
+          List.of(MetricKey.Cpu.TEMPERATURE.key(), MetricKey.Gpu.TEMPERATURE.key(),
+              MetricKey.Gpu.VRAM_TEMPERATURE.key(), MetricKey.Disk.NVME_TEMPERATURE.key(),
+              MetricKey.Disk.SSD_TEMPERATURE.key()),
+          List.of(appConfig.getColorCpu(), appConfig.getColorGpu(), appConfig.getColorVram(),
+              appConfig.getColorNvme(), appConfig.getColorSata()),
+          List.of("CPU", "GPU", "VRAM", "NVMe", "SSD")
+      ));
     }
-    if (!coreKeys.isEmpty()) {
-      groups.add(new ChartGroup("Frequencies (GHz)", coreKeys, coreColors, coreLabels));
+    if (appConfig.isChartLoadEnabled()) {
+      groups.add(new ChartGroup(
+          "Load (%)",
+          List.of(MetricKey.Cpu.LOAD.key(), MetricKey.Gpu.LOAD.key(),
+              MetricKey.Gpu.VRAM_LOAD.key()),
+          List.of(appConfig.getColorCpu(), appConfig.getColorGpu(), appConfig.getColorVram()),
+          List.of("CPU", "GPU", "VRAM")
+      ));
+    }
+    if (appConfig.isChartMemoryEnabled()) {
+      groups.add(new ChartGroup(
+          "Memory (GB)",
+          List.of(MetricKey.Mem.USED.key(), MetricKey.Mem.SWAP_USED.key(),
+              MetricKey.Gpu.VRAM_USED.key()),
+          List.of(appConfig.getColorMemoryUsed(), appConfig.getColorSwapUsed(),
+              appConfig.getColorVram()),
+          List.of("RAM", "Swap", "VRAM")
+      ));
+    }
+    if (appConfig.isChartFrequencyEnabled()) {
+      List<String> coreKeys = new ArrayList<>();
+      List<String> coreColors = new ArrayList<>();
+      List<String> coreLabels = new ArrayList<>();
+      List<String> colorCpuClocks = appConfig.getColorCpuClocks();
+
+      for (int i = 0; i < 8; i++) {
+        String key = MetricKey.CPU.key("Core " + i);
+        boolean exists = rows.stream().anyMatch(r -> (r.getSection() + "."
+            + r.getMetric()).equals(key));
+        if (exists) {
+          coreKeys.add(key);
+          coreColors.add(colorCpuClocks.get(i % colorCpuClocks.size()));
+          coreLabels.add("Core " + i);
+        }
+      }
+      if (!coreKeys.isEmpty()) {
+        groups.add(new ChartGroup("Frequencies (GHz)", coreKeys, coreColors, coreLabels));
+      }
     }
 
     return groups;
@@ -163,7 +158,10 @@ public class ChartPanel {
 
   private LineChart<Number, Number> buildChart(ChartGroup group) {
     NumberAxis axisX = new NumberAxis();
-    axisX.setAutoRanging(true);
+    axisX.setAutoRanging(false);
+    axisX.setLowerBound(0);
+    axisX.setUpperBound(historySize - 1d);
+    axisX.setTickUnit(historySize / 5.0);
     axisX.setTickLabelsVisible(true);
     axisX.setTickMarkVisible(true);
 
@@ -222,12 +220,12 @@ public class ChartPanel {
   }
 
   private Timeline buildTimeline() {
-    Timeline timeline = new Timeline(new KeyFrame(
+    Timeline tl = new Timeline(new KeyFrame(
         Duration.seconds(tickSeconds),
         e -> onTick()
     ));
-    timeline.setCycleCount(Animation.INDEFINITE);
-    return timeline;
+    tl.setCycleCount(Animation.INDEFINITE);
+    return tl;
   }
 
   private void onTick() {
@@ -248,7 +246,6 @@ public class ChartPanel {
       XYChart.Series<Number, Number> series = seriesMap.get(key);
       if (series != null) {
         boolean atCapacity = series.getData().size() >= historySize;
-        //series.getNode().setStyle("-fx-stroke: #000000; -fx-stroke-width: 1px;");
         series.getData().add(new XYChart.Data<>(series.getData().size(), value));
         if (atCapacity) {
           series.getData().removeFirst();

@@ -6,13 +6,15 @@ Displays CPU, GPU, memory, storage, filesystem, and network statistics in a live
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=lcappuccio_linux-system-monitor&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=lcappuccio_linux-system-monitor)
 
+![main-window.png](doc/main-window.png)
+
 ## Requirements
 
 - JDK 21+
 - Maven 3.9+
-- AMD GPU with `amdgpu` kernel driver
+- working GPU drivers (should be AMD / NVIDIA / Intel agnostic)
 - `lm-sensors` installed and configured
-- `smartctl` and `nvme-cli` installed, with the following sudoers rules:
+- `smartctl` and `nvme-cli` installed, with the following sudoers rules (visudo command to edit):
 
 ```
 leo ALL=(ALL) NOPASSWD: /usr/sbin/nvme
@@ -56,6 +58,15 @@ mvn javafx:run
 On first run, create `~/.config/linux-system-monitor/config.properties`:
 
 ```properties
+# Linux System Monitor - default configuration
+# Override by creating ~/.config/linux-system-monitor/config.properties
+
+# time logged (minutes) = (history.size * tick.seconds) / 60 (seconds)
+# 300 ticks at 2 seconds per tick will show 10 minutes of history
+history.size=300
+tick.seconds=2
+ui.theme=dark
+
 net.interface=enp9s0
 gpu.drm.path=/sys/class/drm/card1
 disk.sata.device=/dev/sda
@@ -63,11 +74,41 @@ fs.mountpoints=/,/home,/data
 poll.interval.default=2
 poll.interval.filesystem=60
 poll.interval.disk.temp=15
+
+# valid values: KBps, MBps, GB/s, Kbps, Mbps, Gbps
+network.speed.unit=Kbps
+
+# chart colours
+chart.color.cpu=#0A6FC2
+chart.color.gpu=#F44336
+chart.color.vram=#FF9800
+chart.color.nvme=#9E9E9E
+chart.color.sata=#607D8B
+chart.color.memory.used=#2EB82E
+chart.color.swap.used=#FF00FF
+chart.color.cpu.clocks=#0A305C,#0D3C73,#0F488A,#1254A1,#1461B8,#176DCF,#176DCF,#3086E8,#4794EB,#5EA1ED,#75AEF0,#8CBCF2,#A3C9F5,#BAD7F7,#D1E4FA,#E8F2FC
+
+# Chart group visibility
+chart.group.temperature.enabled=true
+chart.group.load.enabled=true
+chart.group.memory.enabled=true
+chart.group.frequencies.enabled=false
 ```
 
 If the file is absent, the application starts with built-in defaults and logs a warning.
-If a configured device or path does not exist, the affected collector is skipped and an error
+If a configured hardware device or path does not exist, the affected collector is skipped and an error
 is logged — the rest of the application continues normally.
+
+JVM memory usage can be configured with the `-Xmx` flag, e.g. `-Xmx256m` for 256 MB of max heap.
+
+```bash
+vi bin/linux-system-monitor
+
+#!/bin/sh
+JLINK_VM_OPTIONS="--add-opens=javafx.graphics/com.sun.javafx.sg.prism=ALL-UNNAMED -Xms16m -Xmx64m"
+DIR=`dirname $0`
+$DIR/java $JLINK_VM_OPTIONS -m org.lcappuccio.systemmonitor/org.lcappuccio.systemmonitor.Main "$@"
+```
 
 ## Fault Tolerance
 
@@ -76,3 +117,7 @@ is logged — the rest of the application continues normally.
 ## License
 
 This project is licensed under the GNU General Public License v3.0 — see [LICENSE](LICENSE) for details.
+
+## Reference
+
+JavaFX Darcula CSS theme [darculafx](https://github.com/mouse0w0/darculafx/tree/master)

@@ -3,8 +3,7 @@ package org.lcappuccio.systemmonitor.config;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-import java.util.Properties;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -94,4 +93,35 @@ class AppConfigTest {
     AppConfig config = AppConfig.load();
     assertEquals(2, config.getTickSeconds());
   }
+
+  @Test
+  void isChartCpuEnabled_returnsExpectedValue() {
+    AppConfig config = AppConfig.load();
+    assertTrue(config.isChartCpuEnabled());
+  }
+
+  @Test
+  void isChartLoadEnabled_returnsExpectedValue() {
+    AppConfig config = AppConfig.load();
+    assertTrue(config.isChartLoadEnabled());
+  }
+
+  @Test
+  void isChartMemoryEnabled_returnsExpectedValue() {
+    AppConfig config = AppConfig.load();
+    assertTrue(config.isChartMemoryEnabled());
+  }
+
+  @Test
+  void isChartFrequencyEnabled_returnsExpectedValue() {
+    AppConfig config = AppConfig.load();
+    assertFalse(config.isChartFrequencyEnabled());
+  }
+
+  @Test
+  void isDarkModeEnabled_returnsExpectedValue() {
+    AppConfig config = AppConfig.load();
+    assertEquals("light", config.getUiTheme());
+  }
+
 }
