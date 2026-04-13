@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Linux System Monitor
+GenericName=System Monitor
+Comment=Monitor CPU, GPU, Memory, Disk, Network metrics in real-time
+Exec=~/.local/share/applications/linux-system-monitor/bin/linux-system-monitor
+Icon=~/.local/share/icons/hicolor/512x512/apps/linux-system-monitor.png
+Terminal=false
+Categories=System;Monitor;Utility;
+StartupNotify=true
+StartupWMClass=linux-system-monitor
