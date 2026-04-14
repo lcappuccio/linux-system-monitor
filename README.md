@@ -8,18 +8,20 @@ Displays CPU, GPU, memory, storage, filesystem, and network statistics in a live
 
 ![main-window.png](doc/main-window.png)
 
+![main-window-dark-mode.png](doc/main-window-dark-mode.png)
+
 ## Requirements
 
 - JDK 21+
 - Maven 3.9+
-- working GPU drivers (should be AMD / NVIDIA / Intel agnostic)
-- `lm-sensors` installed and configured
-- `smartctl` and `nvme-cli` installed, with the following sudoers rules (visudo command to edit):
+- GPU metrics are targeted at AMD, I do not have an nvidia or intel GPU to test
+- `smartctl` (for SATA drives temperature only), with the following sudoers rule:
 
 ```
-leo ALL=(ALL) NOPASSWD: /usr/sbin/nvme
-leo ALL=(ALL) NOPASSWD: /usr/sbin/smartctl
+$YOUR_USER_HERE ALL=(ALL) NOPASSWD: /usr/sbin/smartctl
 ```
+
+All metrics are read from standard Linux kernel interfaces (`/proc`, `/sys`). No additional drivers or user-space tools required with the exception of smartctl that requires sudoer access.
 
 ## Build
 
