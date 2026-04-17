@@ -256,11 +256,15 @@ public class MainWindow {
     rows.add(memSwapRow);
     memTreeItem.getChildren().add(new TreeItem<>(memSwapRow));
 
-    // Disk nodes at root level
+    // Disks node - with NVMe and SSD as children
     String nvmeModelName = diskCollector.getNvmeModelName();
+    MetricRow disksNode = new MetricRow("Disks", "Disks", "", true, null);
+    TreeItem<MetricRow> disksTreeItem = new TreeItem<>(disksNode);
+    rootItem.getChildren().add(disksTreeItem);
+
     MetricRow nvmeNode = new MetricRow("Disks", nvmeModelName, "", true, null);
     TreeItem<MetricRow> nvmeTreeItem = new TreeItem<>(nvmeNode);
-    rootItem.getChildren().add(nvmeTreeItem);
+    disksTreeItem.getChildren().add(nvmeTreeItem);
 
     MetricRow nvmeTempRow = new MetricRow("Disks", "NVMe Temperature", "—", false, nvmeModelName);
     rows.add(nvmeTempRow);
@@ -269,7 +273,7 @@ public class MainWindow {
     String sataModelName = diskCollector.getSataModelName();
     MetricRow ssdNode = new MetricRow("Disks", sataModelName, "", true, null);
     TreeItem<MetricRow> ssdTreeItem = new TreeItem<>(ssdNode);
-    rootItem.getChildren().add(ssdTreeItem);
+    disksTreeItem.getChildren().add(ssdTreeItem);
 
     MetricRow ssdTempRow = new MetricRow("Disks", "SSD Temperature", "—", false, sataModelName);
     rows.add(ssdTempRow);
