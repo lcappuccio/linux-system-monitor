@@ -11,8 +11,9 @@ import javafx.geometry.Orientation;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeTableColumn;
+import javafx.scene.control.TreeTableView;
 import javafx.scene.layout.BorderPane;
 import javafx.util.Duration;
 import org.lcappuccio.systemmonitor.collectors.Collector;
@@ -46,6 +47,10 @@ public class MainWindow {
   private final ObservableList<MetricRow> rows;
   private final PollerService pollerService;
   private final SplitPane root;
+  private final CpuCollector cpuCollector;
+  private final GpuCollector gpuCollector;
+  private final DiskCollector diskCollector;
+  private final TreeItem<MetricRow> rootItem;
 
   private Timeline heapTimer;
 
@@ -58,14 +63,28 @@ public class MainWindow {
     LOG.info("Building main window");
     this.rows = FXCollections.observableArrayList();
 
+    this.cpuCollector = new CpuCollector();
+    this.cpuCollector.initialize();
+
+    this.gpuCollector = new GpuCollector(config);
+    this.gpuCollector.initialize();
+
+    this.diskCollector = new DiskCollector(config);
+    this.diskCollector.initialize();
+
+    HardwareNames hardwareNames = HardwareNames.fromCollectors(
+        cpuCollector, gpuCollector, diskCollector);
+
+    this.rootItem = new TreeItem<>(new MetricRow("System", "Metrics", ""));
+
     populateRows(config);
 
-    chartPanel = new ChartPanel(rows, config);
+    chartPanel = new ChartPanel(rows, config, hardwareNames);
 
-    TableView<MetricRow> table = buildTable();
+    TreeTableView<MetricRow> treeTable = buildTreeTable();
 
     BorderPane leftPane = new BorderPane();
-    leftPane.setCenter(table);
+    leftPane.setCenter(treeTable);
     leftPane.setBottom(buildStatusBar(config));
 
     root = new SplitPane(leftPane, chartPanel.getRoot());
@@ -85,16 +104,16 @@ public class MainWindow {
 
   private PollerService createPollerService(AppConfig config) {
     List<Collector<?>> defaultCollectors = new ArrayList<>();
-    defaultCollectors.add(new CpuCollector());
+    defaultCollectors.add(cpuCollector);
     defaultCollectors.add(new MemoryCollector());
-    defaultCollectors.add(new GpuCollector(config));
+    defaultCollectors.add(gpuCollector);
     defaultCollectors.add(new NetworkCollector(config));
 
     List<Collector<?>> filesystemCollectors = new ArrayList<>();
     filesystemCollectors.add(new FileSystemCollector(config));
 
     List<Collector<?>> diskTempCollectors = new ArrayList<>();
-    diskTempCollectors.add(new DiskCollector(config));
+    diskTempCollectors.add(diskCollector);
 
     return new PollerService(config, rows, defaultCollectors, filesystemCollectors,
         diskTempCollectors);
@@ -127,78 +146,174 @@ public class MainWindow {
     }
   }
 
-  private TableView<MetricRow> buildTable() {
-    TableColumn<MetricRow, String> sectionCol = new TableColumn<>("Section");
-    sectionCol.setCellValueFactory(
-        cell -> new javafx.beans.property.SimpleStringProperty(cell.getValue().getSection()));
-    sectionCol.setPrefWidth(120);
+  private TreeTableView<MetricRow> buildTreeTable() {
+    TreeTableColumn<MetricRow, String> metricCol = new TreeTableColumn<>("Metric");
+    metricCol.setCellValueFactory(cell -> {
+      TreeItem<MetricRow> treeItem = cell.getValue();
+      if (treeItem == null || treeItem.getValue() == null) {
+        return new javafx.beans.property.SimpleStringProperty("");
+      }
+      return new javafx.beans.property.SimpleStringProperty(treeItem.getValue().getMetric());
+    });
+    metricCol.setPrefWidth(300);
 
-    TableColumn<MetricRow, String> metricCol = new TableColumn<>("Metric");
-    metricCol.setCellValueFactory(
-        cell -> new javafx.beans.property.SimpleStringProperty(cell.getValue().getMetric()));
-    metricCol.setPrefWidth(180);
-
-    TableColumn<MetricRow, String> valueCol = new TableColumn<>("Value");
-    valueCol.setCellValueFactory(cell -> cell.getValue().valueProperty());
+    TreeTableColumn<MetricRow, String> valueCol = new TreeTableColumn<>("Value");
+    valueCol.setCellValueFactory(cell -> {
+      TreeItem<MetricRow> treeItem = cell.getValue();
+      if (treeItem == null || treeItem.getValue() == null) {
+        return new javafx.beans.property.SimpleStringProperty("");
+      }
+      MetricRow row = treeItem.getValue();
+      if (row.isHardwareNode()) {
+        return new javafx.beans.property.SimpleStringProperty("");
+      }
+      return row.valueProperty();
+    });
     valueCol.setPrefWidth(120);
 
-    TableView<MetricRow> table = new TableView<>(rows);
-    table.getColumns().addAll(sectionCol, metricCol, valueCol);
-    table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
-    sectionCol.prefWidthProperty().bind(table.widthProperty().multiply(0.20));
-    metricCol.prefWidthProperty().bind(table.widthProperty().multiply(0.40));
-    valueCol.prefWidthProperty().bind(table.widthProperty().multiply(0.40));
+    TreeTableView<MetricRow> treeTable = new TreeTableView<>();
+    treeTable.getColumns().add(metricCol);
+    treeTable.getColumns().add(valueCol);
+    treeTable.setRoot(rootItem);
+    treeTable.setShowRoot(false);
+    treeTable.setColumnResizePolicy(TreeTableView.CONSTRAINED_RESIZE_POLICY);
 
-    table.setPlaceholder(new javafx.scene.control.Label("No data available"));
+    metricCol.prefWidthProperty().bind(treeTable.widthProperty().multiply(0.70));
+    valueCol.prefWidthProperty().bind(treeTable.widthProperty().multiply(0.30));
 
-    return table;
+    treeTable.setPlaceholder(new javafx.scene.control.Label("No data available"));
+
+    return treeTable;
   }
 
   private void populateRows(AppConfig config) {
-    List<Integer> coreIds = discoverCpuCores();
+    List<Integer> coreIds = cpuCollector.getCoreIds();
+    String cpuModelName = cpuCollector.getModelName();
+    String gpuModelName = gpuCollector.getModelName();
+    String nvmeModelName = diskCollector.getNvmeModelName();
+    String sataModelName = diskCollector.getSataModelName();
 
-    rows.add(new MetricRow("CPU", "Temperature", "—"));
-    rows.add(new MetricRow("CPU", "Load", "—"));
+    // CPU node with model name
+    MetricRow cpuNode = new MetricRow("CPU", cpuModelName, "", true, null);
+    TreeItem<MetricRow> cpuTreeItem = new TreeItem<>(cpuNode);
+    rootItem.getChildren().add(cpuTreeItem);
+
+    MetricRow cpuTempRow = new MetricRow("CPU", "Temperature", "—", false, cpuModelName);
+    rows.add(cpuTempRow);
+    cpuTreeItem.getChildren().add(new TreeItem<>(cpuTempRow));
+
+    MetricRow cpuLoadRow = new MetricRow("CPU", "Load", "—", false, cpuModelName);
+    rows.add(cpuLoadRow);
+    cpuTreeItem.getChildren().add(new TreeItem<>(cpuLoadRow));
 
     for (int i = 0; i < coreIds.size(); i++) {
-      rows.add(new MetricRow("CPU", "Core " + i, "—"));
+      MetricRow coreRow = new MetricRow("CPU", "Core " + i, "—", false, cpuModelName);
+      rows.add(coreRow);
+      cpuTreeItem.getChildren().add(new TreeItem<>(coreRow));
     }
 
-    rows.addAll(
-        // Memory
-        new MetricRow("Memory", "Used", "—"),
-        new MetricRow("Memory", "Swap Used", "—"),
-        // GPU
-        new MetricRow("GPU", "Temperature", "—"),
-        new MetricRow("GPU", "Load", "—"),
-        new MetricRow("GPU", "VRAM Used", "—"),
-        new MetricRow("GPU", "VRAM Temperature", "—"),
-        new MetricRow("GPU", "VRAM Load", "—"),
-        new MetricRow("GPU", "Power", "—"),
-        new MetricRow("GPU", "Fan", "—"),
-        // Disks
-        new MetricRow("Disks", "NVMe Temperature", "—"),
-        new MetricRow("Disks", "SSD Temperature", "—")
-    );
+    // GPU node with model name
+    MetricRow gpuNode = new MetricRow("GPU", gpuModelName, "", true, null);
+    TreeItem<MetricRow> gpuTreeItem = new TreeItem<>(gpuNode);
+    rootItem.getChildren().add(gpuTreeItem);
 
-    // Filesystems — one row per configured mount point
+    MetricRow gpuTempRow = new MetricRow("GPU", "Temperature", "—", false, gpuModelName);
+    rows.add(gpuTempRow);
+    gpuTreeItem.getChildren().add(new TreeItem<>(gpuTempRow));
+
+    MetricRow gpuLoadRow = new MetricRow("GPU", "Load", "—", false, gpuModelName);
+    rows.add(gpuLoadRow);
+    gpuTreeItem.getChildren().add(new TreeItem<>(gpuLoadRow));
+
+    MetricRow gpuVramUsedRow = new MetricRow("GPU", "VRAM Used", "—", false, gpuModelName);
+    rows.add(gpuVramUsedRow);
+    gpuTreeItem.getChildren().add(new TreeItem<>(gpuVramUsedRow));
+
+    MetricRow gpuVramTempRow = new MetricRow("GPU", "VRAM Temperature", "—", false, gpuModelName);
+    rows.add(gpuVramTempRow);
+    gpuTreeItem.getChildren().add(new TreeItem<>(gpuVramTempRow));
+
+    MetricRow gpuVramLoadRow = new MetricRow("GPU", "VRAM Load", "—", false, gpuModelName);
+    rows.add(gpuVramLoadRow);
+    gpuTreeItem.getChildren().add(new TreeItem<>(gpuVramLoadRow));
+
+    MetricRow gpuPowerRow = new MetricRow("GPU", "Power", "—", false, gpuModelName);
+    rows.add(gpuPowerRow);
+    gpuTreeItem.getChildren().add(new TreeItem<>(gpuPowerRow));
+
+    MetricRow gpuFanRow = new MetricRow("GPU", "Fan", "—", false, gpuModelName);
+    rows.add(gpuFanRow);
+    gpuTreeItem.getChildren().add(new TreeItem<>(gpuFanRow));
+
+    // Memory node
+    MetricRow memNode = new MetricRow("Memory", "Memory", "", true, null);
+    TreeItem<MetricRow> memTreeItem = new TreeItem<>(memNode);
+    rootItem.getChildren().add(memTreeItem);
+
+    MetricRow memUsedRow = new MetricRow("Memory", "Used", "—", false, "Memory");
+    rows.add(memUsedRow);
+    memTreeItem.getChildren().add(new TreeItem<>(memUsedRow));
+
+    MetricRow memSwapRow = new MetricRow("Memory", "Swap Used", "—", false, "Memory");
+    rows.add(memSwapRow);
+    memTreeItem.getChildren().add(new TreeItem<>(memSwapRow));
+
+    // Disks node - with NVMe and SSD as children
+    MetricRow disksNode = new MetricRow("Disks", "Disks", "", true, null);
+    TreeItem<MetricRow> disksTreeItem = new TreeItem<>(disksNode);
+    rootItem.getChildren().add(disksTreeItem);
+
+    MetricRow nvmeNode = new MetricRow("Disks", nvmeModelName, "", true, null);
+    TreeItem<MetricRow> nvmeTreeItem = new TreeItem<>(nvmeNode);
+    disksTreeItem.getChildren().add(nvmeTreeItem);
+
+    MetricRow nvmeTempRow = new MetricRow("Disks", "NVMe Temperature", "—", false, nvmeModelName);
+    rows.add(nvmeTempRow);
+    nvmeTreeItem.getChildren().add(new TreeItem<>(nvmeTempRow));
+
+    MetricRow ssdNode = new MetricRow("Disks", sataModelName, "", true, null);
+    TreeItem<MetricRow> ssdTreeItem = new TreeItem<>(ssdNode);
+    disksTreeItem.getChildren().add(ssdTreeItem);
+
+    MetricRow ssdTempRow = new MetricRow("Disks", "SSD Temperature", "—", false, sataModelName);
+    rows.add(ssdTempRow);
+    ssdTreeItem.getChildren().add(new TreeItem<>(ssdTempRow));
+
+    // Filesystems node
+    MetricRow fsNode = new MetricRow("Filesystems", "Filesystems", "", true, null);
+    TreeItem<MetricRow> fsTreeItem = new TreeItem<>(fsNode);
+    rootItem.getChildren().add(fsTreeItem);
+
     for (String mount : config.getFsMountpoints()) {
-      rows.add(new MetricRow("Filesystems", mount, "—"));
+      MetricRow fsRow = new MetricRow("Filesystems", mount, "—", false, "Filesystems");
+      rows.add(fsRow);
+      fsTreeItem.getChildren().add(new TreeItem<>(fsRow));
     }
 
-    // Network
-    rows.addAll(
-        new MetricRow("Network", "IP Address", "—"),
-        new MetricRow("Network", "Link Speed", "—"),
-        new MetricRow("Network", "Upload", "—"),
-        new MetricRow("Network", "Download", "—")
-    );
+    // Network node
+    MetricRow netNode = new MetricRow("Network", "Network", "", true, null);
+    TreeItem<MetricRow> netTreeItem = new TreeItem<>(netNode);
+    rootItem.getChildren().add(netTreeItem);
+
+    MetricRow netIpRow = new MetricRow("Network", "IP Address", "—", false, "Network");
+    rows.add(netIpRow);
+    netTreeItem.getChildren().add(new TreeItem<>(netIpRow));
+
+    MetricRow netSpeedRow = new MetricRow("Network", "Link Speed", "—", false, "Network");
+    rows.add(netSpeedRow);
+    netTreeItem.getChildren().add(new TreeItem<>(netSpeedRow));
+
+    MetricRow netUpRow = new MetricRow("Network", "Upload", "—", false, "Network");
+    rows.add(netUpRow);
+    netTreeItem.getChildren().add(new TreeItem<>(netUpRow));
+
+    MetricRow netDownRow = new MetricRow("Network", "Download", "—", false, "Network");
+    rows.add(netDownRow);
+    netTreeItem.getChildren().add(new TreeItem<>(netDownRow));
   }
 
   private List<Integer> discoverCpuCores() {
-    CpuCollector tempCollector = new CpuCollector();
-    tempCollector.initialize();
-    return tempCollector.getCoreIds();
+    return cpuCollector.getCoreIds();
   }
 
   private javafx.scene.layout.HBox buildStatusBar(AppConfig appConfig) {
