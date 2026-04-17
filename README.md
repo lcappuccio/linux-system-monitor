@@ -130,7 +130,17 @@ $DIR/java $JLINK_VM_OPTIONS -m org.lcappuccio.systemmonitor/org.lcappuccio.syste
 
 ## Fault Tolerance
 
-*TODO*
+Each collector validates its paths and devices independently at startup. If a configured
+hardware device or path does not exist, the affected collector is marked as `UNAVAILABLE`
+and an error is logged — the rest of the application continues functioning normally.
+
+- **CollectorStatus enum**: `OK` (all good), `DEGRADED` (partial data), `UNAVAILABLE` (no data)
+- **hwmon discovery**: Paths like `/sys/class/hwmon/hwmon*` are discovered at runtime by reading
+  the `name` file, not hardcoded
+- **IOException handling**: All sysfs/procfs reads return `Optional.empty()` or empty collections
+  on failure; the poller never crashes
+- **UI resilience**: The JavaFX UI updates through `Platform.runLater()` and continues even
+  when individual collectors are unavailable
 
 ## License
 
