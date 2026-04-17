@@ -109,31 +109,53 @@ public class ChartPanel {
     if (appConfig.isChartCpuEnabled()) {
       groups.add(ChartGroup.builder()
           .title("Temperature (°C)")
-          .metricKeys(List.of(MetricKey.Cpu.TEMPERATURE.key(), MetricKey.Gpu.TEMPERATURE.key(),
-              MetricKey.Gpu.VRAM_TEMPERATURE.key(), MetricKey.Disk.NVME_TEMPERATURE.key(),
+          .metricKeys(List.of(
+              MetricKey.Cpu.TEMPERATURE.key(),
+              MetricKey.Gpu.TEMPERATURE.key(),
+              MetricKey.Gpu.VRAM_TEMPERATURE.key(),
+              MetricKey.Disk.NVME_TEMPERATURE.key(),
               MetricKey.Disk.SSD_TEMPERATURE.key()))
-          .seriesColors(List.of(appConfig.getColorCpu(), appConfig.getColorGpu(),
-              appConfig.getColorVram(), appConfig.getColorNvme(), appConfig.getColorSata()))
-          .seriesLabels(List.of(hardwareNames.cpuModel(), hardwareNames.gpuModel(),
-              "VRAM", hardwareNames.nvmeModel(), hardwareNames.sataModel()))
+          .seriesColors(List.of(
+              appConfig.getColorCpu(),
+              appConfig.getColorGpu(),
+              appConfig.getColorVram(),
+              appConfig.getColorNvme(),
+              appConfig.getColorSata()))
+          .seriesLabels(List.of(
+              hardwareNames.cpuModel(),
+              hardwareNames.gpuModel(),
+              "VRAM",
+              hardwareNames.nvmeModel(),
+              hardwareNames.sataModel()))
           .build());
     }
     if (appConfig.isChartLoadEnabled()) {
       groups.add(ChartGroup.builder()
           .title("Load (%)")
-          .metricKeys(List.of(MetricKey.Cpu.LOAD.key(), MetricKey.Gpu.LOAD.key(),
+          .metricKeys(List.of(
+              MetricKey.Cpu.LOAD.key(),
+              MetricKey.Gpu.LOAD.key(),
               MetricKey.Gpu.VRAM_LOAD.key()))
-          .seriesColors(List.of(appConfig.getColorCpu(), appConfig.getColorGpu(),
+          .seriesColors(List.of(
+              appConfig.getColorCpu(),
+              appConfig.getColorGpu(),
               appConfig.getColorVram()))
-          .seriesLabels(List.of(hardwareNames.cpuModel(), hardwareNames.gpuModel(), "VRAM"))
+          .seriesLabels(List.of(
+              hardwareNames.cpuModel(),
+              hardwareNames.gpuModel(),
+              "VRAM"))
           .build());
     }
     if (appConfig.isChartMemoryEnabled()) {
       groups.add(ChartGroup.builder()
           .title("Memory (GB)")
-          .metricKeys(List.of(MetricKey.Mem.USED.key(), MetricKey.Mem.SWAP_USED.key(),
+          .metricKeys(List.of(
+              MetricKey.Mem.USED.key(),
+              MetricKey.Mem.SWAP_USED.key(),
               MetricKey.Gpu.VRAM_USED.key()))
-          .seriesColors(List.of(appConfig.getColorMemoryUsed(), appConfig.getColorSwapUsed(),
+          .seriesColors(List.of(
+              appConfig.getColorMemoryUsed(),
+              appConfig.getColorSwapUsed(),
               appConfig.getColorVram()))
           .seriesLabels(List.of("RAM", "Swap", "VRAM"))
           .build());
