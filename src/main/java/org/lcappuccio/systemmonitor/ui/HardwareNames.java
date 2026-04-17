@@ -15,6 +15,14 @@ public record HardwareNames(
     String nvmeModel,
     String sataModel
 ) {
+  /**
+   * Creates HardwareNames from initialized collectors.
+   *
+   * @param cpuCollector   the CPU collector
+   * @param gpuCollector  the GPU collector
+   * @param diskCollector the disk collector
+   * @return HardwareNames with model names from all collectors
+   */
   public static HardwareNames fromCollectors(
       org.lcappuccio.systemmonitor.collectors.CpuCollector cpuCollector,
       org.lcappuccio.systemmonitor.collectors.GpuCollector gpuCollector,

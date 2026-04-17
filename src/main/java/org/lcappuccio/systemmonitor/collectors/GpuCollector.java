@@ -23,6 +23,7 @@ public class GpuCollector implements Collector<GpuMetrics> {
   private static final double NO_TEMP = Double.NaN;
 
   private static final Map<String, String> AMD_DEVICE_ID_MAP;
+
   static {
     AMD_DEVICE_ID_MAP = new HashMap<>();
     AMD_DEVICE_ID_MAP.put("7450", "AMD Radeon HD 8870M");

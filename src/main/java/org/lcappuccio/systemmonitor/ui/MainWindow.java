@@ -187,13 +187,8 @@ public class MainWindow {
   }
 
   private void populateRows(AppConfig config) {
-    List<Integer> coreIds = cpuCollector.getCoreIds();
+    // CPU
     String cpuModelName = cpuCollector.getModelName();
-    String gpuModelName = gpuCollector.getModelName();
-    String nvmeModelName = diskCollector.getNvmeModelName();
-    String sataModelName = diskCollector.getSataModelName();
-
-    // CPU node with model name
     MetricRow cpuNode = new MetricRow("CPU", cpuModelName, "", true, null);
     TreeItem<MetricRow> cpuTreeItem = new TreeItem<>(cpuNode);
     rootItem.getChildren().add(cpuTreeItem);
@@ -206,12 +201,15 @@ public class MainWindow {
     rows.add(cpuLoadRow);
     cpuTreeItem.getChildren().add(new TreeItem<>(cpuLoadRow));
 
+    List<Integer> coreIds = cpuCollector.getCoreIds();
     for (int i = 0; i < coreIds.size(); i++) {
       MetricRow coreRow = new MetricRow("CPU", "Core " + i, "—", false, cpuModelName);
       rows.add(coreRow);
       cpuTreeItem.getChildren().add(new TreeItem<>(coreRow));
     }
 
+    // GPU
+    String gpuModelName = gpuCollector.getModelName();
     // GPU node with model name
     MetricRow gpuNode = new MetricRow("GPU", gpuModelName, "", true, null);
     TreeItem<MetricRow> gpuTreeItem = new TreeItem<>(gpuNode);
@@ -259,6 +257,7 @@ public class MainWindow {
     memTreeItem.getChildren().add(new TreeItem<>(memSwapRow));
 
     // Disks node - with NVMe and SSD as children
+    String nvmeModelName = diskCollector.getNvmeModelName();
     MetricRow disksNode = new MetricRow("Disks", "Disks", "", true, null);
     TreeItem<MetricRow> disksTreeItem = new TreeItem<>(disksNode);
     rootItem.getChildren().add(disksTreeItem);
@@ -271,6 +270,7 @@ public class MainWindow {
     rows.add(nvmeTempRow);
     nvmeTreeItem.getChildren().add(new TreeItem<>(nvmeTempRow));
 
+    String sataModelName = diskCollector.getSataModelName();
     MetricRow ssdNode = new MetricRow("Disks", sataModelName, "", true, null);
     TreeItem<MetricRow> ssdTreeItem = new TreeItem<>(ssdNode);
     disksTreeItem.getChildren().add(ssdTreeItem);
