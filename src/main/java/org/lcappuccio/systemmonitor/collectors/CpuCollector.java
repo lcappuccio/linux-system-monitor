@@ -21,6 +21,7 @@ public class CpuCollector implements Collector<CpuMetrics> {
 
   private static final Logger LOG = LoggerFactory.getLogger(CpuCollector.class);
   private static final String PROC_STAT = "/proc/stat";
+  private static final String PROC_CPUINFO = "/proc/cpuinfo";
   private static final String SYS_CPU_PATH = "/sys/devices/system/cpu";
   private static final String HWMON_PATH = "/sys/class/hwmon";
   private static final double NO_TEMP = Double.NaN;
@@ -28,6 +29,7 @@ public class CpuCollector implements Collector<CpuMetrics> {
   private final List<Integer> coreIds = new ArrayList<>();
   private String hwmonPath = null;
   private String tempInputPath = null;
+  private String modelName = "CPU";
 
   private CollectorStatus status = CollectorStatus.UNAVAILABLE;
 
@@ -38,6 +40,7 @@ public class CpuCollector implements Collector<CpuMetrics> {
   @Override
   public void initialize() {
     discoverCores();
+    discoverModelName();
     discoverHwmon();
 
     if (hwmonPath == null) {
@@ -118,6 +121,25 @@ public class CpuCollector implements Collector<CpuMetrics> {
     } catch (IOException e) {
       LOG.error("Failed to find Tctl sensor: {}", e.getMessage());
     }
+  }
+
+  private void discoverModelName() {
+    try (BufferedReader reader = new BufferedReader(new FileReader(PROC_CPUINFO))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        if (line.startsWith("model name")) {
+          int colon = line.indexOf(':');
+          if (colon > 0) {
+            modelName = line.substring(colon + 1).trim();
+            LOG.info("Discovered CPU model: {}", modelName);
+            return;
+          }
+        }
+      }
+    } catch (IOException e) {
+      LOG.warn("Failed to read CPU model from {}: {}", PROC_CPUINFO, e.getMessage());
+    }
+    LOG.warn("CPU model name not found, using fallback: {}", modelName);
   }
 
   @Override
@@ -242,5 +264,9 @@ public class CpuCollector implements Collector<CpuMetrics> {
 
   public List<Integer> getCoreIds() {
     return List.copyOf(coreIds);
+  }
+
+  public String getModelName() {
+    return modelName;
   }
 }

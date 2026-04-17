@@ -15,6 +15,8 @@ public final class MetricRow {
   private final String section;
   private final String metric;
   private final StringProperty value;
+  private final boolean isHardwareNode;
+  private final String parentSection;
 
   /**
    * Constructs a new {@code MetricRow} with an initial value.
@@ -24,9 +26,25 @@ public final class MetricRow {
    * @param initialValue the initial display value (e.g. {@code "—"} when not yet available)
    */
   public MetricRow(String section, String metric, String initialValue) {
+    this(section, metric, initialValue, false, null);
+  }
+
+  /**
+   * Constructs a new {@code MetricRow} with hierarchical support.
+   *
+   * @param section the display group this metric belongs to (e.g. {@code "CPU"}, {@code "GPU"})
+   * @param metric  the metric name (e.g. {@code "Temperature"}, {@code "Load"})
+   * @param initialValue the initial display value (e.g. {@code "—"} when not yet available)
+   * @param isHardwareNode true if this row is a parent hardware node
+   * @param parentSection the parent section name for child metrics, null for top-level
+   */
+  public MetricRow(String section, String metric, String initialValue,
+      boolean isHardwareNode, String parentSection) {
     this.section = section;
     this.metric = metric;
     this.value = new SimpleStringProperty(initialValue);
+    this.isHardwareNode = isHardwareNode;
+    this.parentSection = parentSection;
   }
 
   /**
@@ -74,5 +92,23 @@ public final class MetricRow {
    */
   public StringProperty valueProperty() {
     return value;
+  }
+
+  /**
+   * Returns whether this row is a hardware node (parent).
+   *
+   * @return true if hardware node, false otherwise
+   */
+  public boolean isHardwareNode() {
+    return isHardwareNode;
+  }
+
+  /**
+   * Returns the parent section name for child metrics.
+   *
+   * @return parent section or null if top-level
+   */
+  public String getParentSection() {
+    return parentSection;
   }
 }

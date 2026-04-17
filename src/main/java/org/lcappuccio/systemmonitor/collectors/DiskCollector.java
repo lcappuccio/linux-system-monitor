@@ -26,6 +26,8 @@ public class DiskCollector implements Collector<DiskMetrics> {
   private final String sataDevice;
   private String nvmeHwmonPath = null;
   private String nvmeTempPath = null;
+  private String nvmeModelName = "NVMe";
+  private String sataModelName = "SSD";
 
   private CollectorStatus status = CollectorStatus.UNAVAILABLE;
 
@@ -35,6 +37,8 @@ public class DiskCollector implements Collector<DiskMetrics> {
 
   @Override
   public void initialize() {
+    discoverNvmeModel();
+    discoverSataModel();
     discoverNvmeHwmon();
     boolean sataValid = checkSataDevice();
 
@@ -85,6 +89,87 @@ public class DiskCollector implements Collector<DiskMetrics> {
       return Files.exists(Paths.get(sataDevice));
     }
     return Files.exists(Paths.get("/dev/" + sataDevice));
+  }
+
+  private void discoverNvmeModel() {
+    Path hwmonDir = Paths.get(HWMON_PATH);
+    if (!Files.exists(hwmonDir)) {
+      return;
+    }
+
+    try (DirectoryStream<Path> stream = Files.newDirectoryStream(hwmonDir, "hwmon*")) {
+      for (Path hwmon : stream) {
+        Path nameFile = hwmon.resolve("name");
+        if (Files.exists(nameFile)) {
+          String name = Files.readString(nameFile).trim();
+          if ("nvme".equals(name)) {
+            Path modelFile = hwmon.resolve("device/model");
+            if (Files.exists(modelFile)) {
+              String model = Files.readString(modelFile).trim();
+              if (!model.isEmpty()) {
+                nvmeModelName = model;
+                LOG.info("Discovered NVMe model: {}", nvmeModelName);
+                return;
+              }
+            }
+            Path serialFile = hwmon.resolve("device/serial");
+            if (Files.exists(serialFile)) {
+              String serial = Files.readString(serialFile).trim();
+              if (!serial.isEmpty()) {
+                nvmeModelName = "NVMe (" + serial + ")";
+                LOG.info("Discovered NVMe model: {}", nvmeModelName);
+                return;
+              }
+            }
+          }
+        }
+      }
+    } catch (IOException e) {
+      LOG.warn("Failed to discover NVMe model: {}", e.getMessage());
+    }
+  }
+
+  private void discoverSataModel() {
+    if (sataDevice == null || sataDevice.isEmpty()) {
+      return;
+    }
+    String device = sataDevice;
+    if (!device.startsWith("/dev/")) {
+      device = "/dev/" + device;
+    }
+
+    Process process = null;
+    try {
+      process = new ProcessBuilder("sudo", "smartctl", "-i", device)
+          .redirectErrorStream(true)
+          .start();
+
+      boolean exited = process.waitFor(5, TimeUnit.SECONDS);
+      if (!exited || process.exitValue() != 0) {
+        return;
+      }
+
+      try (BufferedReader reader = new BufferedReader(
+          new InputStreamReader(process.getInputStream()))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+          if (line.contains("Model:")) {
+            String model = line.substring(line.indexOf(":") + 1).trim();
+            if (!model.isEmpty()) {
+              sataModelName = model;
+              LOG.info("Discovered SATA model: {}", sataModelName);
+              return;
+            }
+          }
+        }
+      }
+    } catch (IOException | InterruptedException e) {
+      LOG.debug("Failed to discover SATA model: {}", e.getMessage());
+    } finally {
+      if (process != null && process.isAlive()) {
+        process.destroyForcibly();
+      }
+    }
   }
 
   @Override
@@ -169,5 +254,13 @@ public class DiskCollector implements Collector<DiskMetrics> {
   @Override
   public String getName() {
     return "Disks";
+  }
+
+  public String getNvmeModelName() {
+    return nvmeModelName;
+  }
+
+  public String getSataModelName() {
+    return sataModelName;
   }
 }
