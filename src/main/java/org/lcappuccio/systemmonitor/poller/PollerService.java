@@ -26,7 +26,6 @@ public class PollerService {
 
   private final AppConfig config;
   private final ScheduledExecutorService executor;
-  private final ObservableList<MetricRow> rows;
   private final Map<String, MetricRow> rowMap;
   private final List<Collector<?>> defaultCollectors;
   private final List<Collector<?>> filesystemCollectors;
@@ -46,7 +45,6 @@ public class PollerService {
       List<Collector<?>> diskTempCollectors) {
     this.config = config;
     this.executor = Executors.newScheduledThreadPool(3);
-    this.rows = rows;
     this.rowMap = buildRowMap(rows);
     this.defaultCollectors = defaultCollectors;
     this.filesystemCollectors = filesystemCollectors;

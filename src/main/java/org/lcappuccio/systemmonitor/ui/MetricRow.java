@@ -1,5 +1,6 @@
 package org.lcappuccio.systemmonitor.ui;
 
+import java.util.Optional;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
@@ -12,67 +13,80 @@ import javafx.beans.property.StringProperty;
  */
 public final class MetricRow {
 
+  private final String color;
   private final String section;
   private final String metric;
   private final StringProperty value;
+  private final boolean isHardwareNode;
+  private final String parentSection;
 
-  /**
-   * Constructs a new {@code MetricRow} with an initial value.
-   *
-   * @param section the display group this metric belongs to (e.g. {@code "CPU"}, {@code "GPU"})
-   * @param metric  the metric name (e.g. {@code "Temperature"}, {@code "Load"})
-   * @param initialValue the initial display value (e.g. {@code "—"} when not yet available)
-   */
   public MetricRow(String section, String metric, String initialValue) {
-    this.section = section;
-    this.metric = metric;
-    this.value = new SimpleStringProperty(initialValue);
+    this(section, metric, initialValue, false, null, null);
   }
 
   /**
-   * Returns the section name this row belongs to.
+   * Constructs a {@code MetricRow} with hierarchical support.
    *
-   * @return section name
+   * @param section the display group
+   * @param metric the metric name
+   * @param initialValue the initial display value
+   * @param isHardwareNode true if parent node
+   * @param parentSection parent section name
    */
+  public MetricRow(String section, String metric, String initialValue,
+      boolean isHardwareNode, String parentSection) {
+    this(section, metric, initialValue, isHardwareNode, parentSection, null);
+  }
+
+  /**
+   * Constructs a {@code MetricRow} with color.
+   *
+   * @param section the display group
+   * @param metric the metric name
+   * @param initialValue the initial display value
+   * @param isHardwareNode true if parent node
+   * @param parentSection parent section name
+   * @param color hex color for node
+   */
+  public MetricRow(String section, String metric, String initialValue,
+      boolean isHardwareNode, String parentSection, String color) {
+    this.section = section;
+    this.metric = metric;
+    this.value = new SimpleStringProperty(initialValue);
+    this.isHardwareNode = isHardwareNode;
+    this.parentSection = parentSection;
+    this.color = color;
+  }
+
   public String getSection() {
     return section;
   }
 
-  /**
-   * Returns the metric name for this row.
-   *
-   * @return metric name
-   */
   public String getMetric() {
     return metric;
   }
 
-  /**
-   * Returns the current display value.
-   *
-   * @return current value string
-   */
   public String getValue() {
     return value.get();
   }
 
-  /**
-   * Updates the display value.
-   *
-   * <p>Must be called from the JavaFX Application Thread.
-   *
-   * @param newValue the new display value
-   */
   public void setValue(String newValue) {
     value.set(newValue);
   }
 
-  /**
-   * Returns the {@link StringProperty} for JavaFX {@code TableView} binding.
-   *
-   * @return the value property
-   */
   public StringProperty valueProperty() {
     return value;
+  }
+
+  public boolean isHardwareNode() {
+    return isHardwareNode;
+  }
+
+  public String getParentSection() {
+    return parentSection;
+  }
+
+  public Optional<String> getColor() {
+    return Optional.ofNullable(color);
   }
 }
