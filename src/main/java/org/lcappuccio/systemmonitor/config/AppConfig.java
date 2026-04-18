@@ -26,10 +26,8 @@ public final class AppConfig {
 
   private static final Logger LOG = LoggerFactory.getLogger(AppConfig.class);
   private static final String BUNDLED_CONFIG = "/config.properties";
-  private static final List<String> CONFIG_SEARCH_PATHS = List.of(
-      System.getProperty("user.home") + "/.config/linux-system-monitor/config.properties",
-      "/etc/linux-system-monitor/config.properties"
-  );
+  private static final String USER_CONFIG_PATH =
+      System.getProperty("user.home") + "/.config/linux-system-monitor/config.properties";
 
   private final int historySize;
   private final double tickSeconds;
@@ -97,53 +95,14 @@ public final class AppConfig {
   }
 
   /**
-   * Loads configuration from classpath or config directories.
-   *
-   * <p>Loading order:
-   * <ol>
-   *   <li>Bundled {@code config.properties} from classpath (if present)</li>
-   *   <li>~/.config/linux-system-monitor/config.properties</li>
-   *   <li>/etc/linux-system-monitor/config.properties</li>
-   *   <li>Bundled defaults from classpath (always present)</li>
-   * </ol>
+   * Loads configuration from bundled defaults overlaid with the user config file if present.
    *
    * @return a fully populated {@link AppConfig} instance
    */
   public static AppConfig load() {
-    Properties props = loadConfig();
+    Properties props = loadBundledDefaults();
+    overlayUserConfig(props);
     return new AppConfig(props);
-  }
-
-  private static Properties loadConfig() {
-    Properties props = new Properties();
-
-    // Try classpath first
-    try (InputStream in = AppConfig.class.getResourceAsStream(BUNDLED_CONFIG)) {
-      if (in != null) {
-        props.load(in);
-        LOG.info("Loaded config from classpath: {}", BUNDLED_CONFIG);
-        return props;
-      }
-    } catch (IOException e) {
-      LOG.warn("Failed to load classpath config: {}", e.getMessage());
-    }
-
-    // Try config directories
-    for (String path : CONFIG_SEARCH_PATHS) {
-      var configFile = Paths.get(path);
-      if (Files.exists(configFile)) {
-        try (InputStream in = Files.newInputStream(configFile)) {
-          props.load(in);
-          LOG.info("Loaded config from: {}", path);
-          return props;
-        } catch (IOException e) {
-          LOG.warn("Failed to read config from {}: {}", path, e.getMessage());
-        }
-      }
-    }
-
-    // Fall back to bundled defaults (last resort)
-    return loadBundledDefaults();
   }
 
   private static Properties loadBundledDefaults() {
@@ -159,6 +118,21 @@ public final class AppConfig {
       LOG.error("Failed to load bundled config: {}", e.getMessage());
     }
     return props;
+  }
+
+  private static void overlayUserConfig(Properties props) {
+    var userConfig = Paths.get(USER_CONFIG_PATH);
+    if (!Files.exists(userConfig)) {
+      LOG.warn("User config not found at {}, using bundled defaults", USER_CONFIG_PATH);
+      return;
+    }
+    try (InputStream in = Files.newInputStream(userConfig)) {
+      props.load(in);
+      LOG.info("Loaded user config from {}", USER_CONFIG_PATH);
+    } catch (IOException e) {
+      LOG.warn("Failed to read user config {}, using bundled defaults: {}",
+          USER_CONFIG_PATH, e.getMessage());
+    }
   }
 
   private static int parseInt(Properties props, String key, int fallback) {
