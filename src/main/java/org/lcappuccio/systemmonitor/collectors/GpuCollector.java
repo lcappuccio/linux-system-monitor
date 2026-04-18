@@ -5,8 +5,6 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import org.lcappuccio.systemmonitor.config.AppConfig;
 import org.lcappuccio.systemmonitor.model.GpuMetrics;
@@ -22,110 +20,8 @@ public class GpuCollector implements Collector<GpuMetrics> {
   private static final String HWMON_PATH = "/sys/class/hwmon";
   private static final double NO_TEMP = Double.NaN;
 
-  private static final Map<String, String> AMD_DEVICE_ID_MAP;
-
-  static {
-    AMD_DEVICE_ID_MAP = new HashMap<>();
-    AMD_DEVICE_ID_MAP.put("7450", "AMD Radeon HD 8870M");
-    AMD_DEVICE_ID_MAP.put("7640", "AMD Kaveri");
-    AMD_DEVICE_ID_MAP.put("7642", "AMD Kaveri");
-    AMD_DEVICE_ID_MAP.put("9830", "AMD Carrizo");
-    AMD_DEVICE_ID_MAP.put("9870", "AMD Carrizo");
-    AMD_DEVICE_ID_MAP.put("15DD", "AMD Picasso");
-    AMD_DEVICE_ID_MAP.put("15D8", "AMD Picasso");
-    AMD_DEVICE_ID_MAP.put("1636", "AMD Renoir");
-    AMD_DEVICE_ID_MAP.put("1638", "AMD Renoir");
-    AMD_DEVICE_ID_MAP.put("15E7", "AMD Raven Ridge");
-    AMD_DEVICE_ID_MAP.put("15EA", "AMD Raven Ridge");
-    AMD_DEVICE_ID_MAP.put("15EB", "AMD Raven Ridge");
-    AMD_DEVICE_ID_MAP.put("15EC", "AMD Raven Ridge");
-    AMD_DEVICE_ID_MAP.put("15FF", "AMD Renoir");
-    AMD_DEVICE_ID_MAP.put("7310", "AMD Arcturus");
-    AMD_DEVICE_ID_MAP.put("7318", "AMD Arcturus");
-    AMD_DEVICE_ID_MAP.put("7319", "AMD Arcturus");
-    AMD_DEVICE_ID_MAP.put("731F", "AMD Arcturus");
-    AMD_DEVICE_ID_MAP.put("7360", "AMD Aldebaran");
-    AMD_DEVICE_ID_MAP.put("740F", "AMD Instinct MI210");
-    AMD_DEVICE_ID_MAP.put("7408", "AMD Instinct MI250X");
-    AMD_DEVICE_ID_MAP.put("67FF", "AMD Navi 10");
-    AMD_DEVICE_ID_MAP.put("687F", "AMD Navi 10");
-    AMD_DEVICE_ID_MAP.put("15BF", "AMD Navi 12");
-    AMD_DEVICE_ID_MAP.put("7362", "AMD Navi 14");
-    AMD_DEVICE_ID_MAP.put("67C0", "AMD Navi 14");
-    AMD_DEVICE_ID_MAP.put("67C1", "AMD Navi 14");
-    AMD_DEVICE_ID_MAP.put("67C2", "AMD Navi 14");
-    AMD_DEVICE_ID_MAP.put("67C4", "AMD Navi 14");
-    AMD_DEVICE_ID_MAP.put("67C7", "AMD Navi 14");
-    AMD_DEVICE_ID_MAP.put("67DF", "AMD Navi 14");
-    AMD_DEVICE_ID_MAP.put("73A0", "AMD Navi 16");
-    AMD_DEVICE_ID_MAP.put("73A1", "AMD Navi 16");
-    AMD_DEVICE_ID_MAP.put("73A2", "AMD Navi 16");
-    AMD_DEVICE_ID_MAP.put("73A3", "AMD Navi 16");
-    AMD_DEVICE_ID_MAP.put("73A4", "AMD Navi 16");
-    AMD_DEVICE_ID_MAP.put("73A5", "AMD Navi 17");
-    AMD_DEVICE_ID_MAP.put("73A6", "AMD Navi 17");
-    AMD_DEVICE_ID_MAP.put("73A7", "AMD Navi 17");
-    AMD_DEVICE_ID_MAP.put("73A8", "AMD Navi 17");
-    AMD_DEVICE_ID_MAP.put("73A9", "AMD Navi 17");
-    AMD_DEVICE_ID_MAP.put("73AA", "AMD Navi 17");
-    AMD_DEVICE_ID_MAP.put("73AB", "AMD Navi 16");
-    AMD_DEVICE_ID_MAP.put("73AC", "AMD Navi 16");
-    AMD_DEVICE_ID_MAP.put("73AD", "AMD Navi 16");
-    AMD_DEVICE_ID_MAP.put("73AE", "AMD Navi 16");
-    AMD_DEVICE_ID_MAP.put("73AF", "AMD Navi 16");
-    AMD_DEVICE_ID_MAP.put("73BF", "AMD Navi 16");
-    AMD_DEVICE_ID_MAP.put("1002", "AMD Rembrandt");
-    AMD_DEVICE_ID_MAP.put("1618", "AMD Rembrandt");
-    AMD_DEVICE_ID_MAP.put("1619", "AMD Rembrandt");
-    AMD_DEVICE_ID_MAP.put("161A", "AMD Rembrandt");
-    AMD_DEVICE_ID_MAP.put("161B", "AMD Rembrandt");
-    AMD_DEVICE_ID_MAP.put("161C", "AMD Rembrandt");
-    AMD_DEVICE_ID_MAP.put("161D", "AMD Rembrandt");
-    AMD_DEVICE_ID_MAP.put("161E", "AMD Rembrandt");
-    AMD_DEVICE_ID_MAP.put("161F", "AMD Rembrandt");
-    AMD_DEVICE_ID_MAP.put("1620", "AMD Cezanne");
-    AMD_DEVICE_ID_MAP.put("1622", "AMD Cezanne");
-    AMD_DEVICE_ID_MAP.put("1623", "AMD Cezanne");
-    AMD_DEVICE_ID_MAP.put("1624", "AMD Cezanne");
-    AMD_DEVICE_ID_MAP.put("1625", "AMD Cezanne");
-    AMD_DEVICE_ID_MAP.put("1626", "AMD Cezanne");
-    AMD_DEVICE_ID_MAP.put("1627", "AMD Cezanne");
-    AMD_DEVICE_ID_MAP.put("162A", "AMD Cezanne");
-    AMD_DEVICE_ID_MAP.put("162B", "AMD Cezanne");
-    AMD_DEVICE_ID_MAP.put("162C", "AMD Cezanne");
-    AMD_DEVICE_ID_MAP.put("1639", "AMD Lucienne");
-    AMD_DEVICE_ID_MAP.put("163F", "AMD Barcelona");
-    AMD_DEVICE_ID_MAP.put("164C", "AMD Van Gogh");
-    AMD_DEVICE_ID_MAP.put("164D", "AMD Van Gogh");
-    AMD_DEVICE_ID_MAP.put("164F", "AMD Van Gogh");
-    AMD_DEVICE_ID_MAP.put("1650", "AMD Van Gogh");
-    AMD_DEVICE_ID_MAP.put("1651", "AMD Van Gogh");
-    AMD_DEVICE_ID_MAP.put("165F", "AMD Van Gogh");
-    AMD_DEVICE_ID_MAP.put("740C", "AMD Instinct MI250");
-    AMD_DEVICE_ID_MAP.put("744C", "AMD Aldebaran");
-    AMD_DEVICE_ID_MAP.put("744E", "AMD Aldebaran");
-    AMD_DEVICE_ID_MAP.put("744F", "AMD Aldebaran");
-    AMD_DEVICE_ID_MAP.put("7460", "AMD Aldebaran");
-    AMD_DEVICE_ID_MAP.put("7462", "AMD Aldebaran");
-    AMD_DEVICE_ID_MAP.put("7480", "AMD Aldebaran");
-    AMD_DEVICE_ID_MAP.put("748B", "AMD Aldebaran");
-    AMD_DEVICE_ID_MAP.put("748C", "AMD Aldebaran");
-    AMD_DEVICE_ID_MAP.put("7550", "AMD Radeon RX 9070");
-    AMD_DEVICE_ID_MAP.put("7551", "AMD Radeon RX 9070");
-    AMD_DEVICE_ID_MAP.put("7552", "AMD Radeon RX 9070");
-    AMD_DEVICE_ID_MAP.put("7553", "AMD Radeon RX 9070");
-    AMD_DEVICE_ID_MAP.put("7557", "AMD Radeon RX 9070");
-    AMD_DEVICE_ID_MAP.put("7558", "AMD Radeon RX 9070");
-    AMD_DEVICE_ID_MAP.put("7559", "AMD Radeon RX 9070");
-    AMD_DEVICE_ID_MAP.put("755A", "AMD Radeon RX 9070");
-    AMD_DEVICE_ID_MAP.put("755C", "AMD Radeon RX 9070");
-    AMD_DEVICE_ID_MAP.put("755D", "AMD Radeon RX 9070");
-    AMD_DEVICE_ID_MAP.put("755F", "AMD Radeon RX 9070");
-  }
-
   private final String drmPath;
   private String hwmonPath = null;
-  private String modelName = "GPU";
   private String junctionTempPath = null;
   private String vramTempPath = null;
   private String powerPath = null;
@@ -144,7 +40,6 @@ public class GpuCollector implements Collector<GpuMetrics> {
       LOG.error("GPU DRM path {} not found", drmPath);
     }
 
-    discoverModelName();
     discoverHwmon();
 
     boolean hwmonValid = hwmonPath != null
@@ -219,55 +114,6 @@ public class GpuCollector implements Collector<GpuMetrics> {
     } catch (IOException e) {
       LOG.error("Failed to find GPU sensors: {}", e.getMessage());
     }
-  }
-
-  private void discoverModelName() {
-    if (drmPath != null) {
-      try {
-        Path namePath = Paths.get(drmPath, "device", "name");
-        if (Files.exists(namePath)) {
-          String name = Files.readString(namePath).trim();
-          if (!name.isEmpty()) {
-            modelName = name;
-            LOG.info("Discovered GPU model from DRM: {}", modelName);
-            return;
-          }
-        }
-      } catch (IOException e) {
-        LOG.debug("Failed to read GPU model from DRM: {}", e.getMessage());
-      }
-
-      try {
-        Path ueventPath = Paths.get(drmPath, "device", "uevent");
-        if (Files.exists(ueventPath)) {
-          String content = Files.readString(ueventPath);
-          String pciId = extractPciId(content);
-          if (pciId != null) {
-            String deviceId = pciId.contains(":") ? pciId.split(":")[1] : pciId;
-            String mappedName = AMD_DEVICE_ID_MAP.get(deviceId.toUpperCase());
-            if (mappedName != null) {
-              modelName = mappedName;
-              LOG.info("Discovered GPU model from PCI ID {}: {}", deviceId, modelName);
-              return;
-            }
-            LOG.info("GPU device ID {} not in mapping, using fallback", deviceId);
-          }
-        }
-      } catch (IOException e) {
-        LOG.debug("Failed to read GPU uevent: {}", e.getMessage());
-      }
-    }
-
-    LOG.warn("GPU model name not found, using fallback: {}", modelName);
-  }
-
-  private String extractPciId(String ueventContent) {
-    for (String line : ueventContent.split("\n")) {
-      if (line.startsWith("PCI_ID=")) {
-        return line.substring("PCI_ID=".length()).trim();
-      }
-    }
-    return null;
   }
 
   @Override
@@ -384,9 +230,5 @@ public class GpuCollector implements Collector<GpuMetrics> {
   @Override
   public String getName() {
     return "GPU";
-  }
-
-  public String getModelName() {
-    return modelName;
   }
 }
