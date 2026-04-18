@@ -172,7 +172,7 @@ public class ChartPanel {
     chart.setTitle(group.title());
     chart.setAnimated(false);
     chart.setCreateSymbols(false);
-    chart.setLegendVisible(true);
+    chart.setLegendVisible(false);
     chart.setMinHeight(CHART_MIN_HEIGHT);
 
     // Inject CSS before adding series — applied on first layout pass, no timing issues
