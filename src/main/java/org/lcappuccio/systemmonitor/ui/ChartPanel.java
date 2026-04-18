@@ -51,17 +51,14 @@ public class ChartPanel {
   private final Timeline timeline;
 
   private final AppConfig appConfig;
-  private final HardwareNames hardwareNames;
 
   /**
    * Constructs a {@code ChartPanel}, builds all chart groups, and subscribes to all rows.
    *
-   * @param rows           the observable list of metric rows to monitor
-   * @param appConfig      the configuration object
-   * @param hardwareNames  the hardware model names for chart labels
+   * @param rows      the observable list of metric rows to monitor
+   * @param appConfig the configuration object
    */
-  public ChartPanel(ObservableList<MetricRow> rows, AppConfig appConfig,
-      HardwareNames hardwareNames) {
+  public ChartPanel(ObservableList<MetricRow> rows, AppConfig appConfig) {
     this.history = new HashMap<>();
     this.lastKnownValue = new HashMap<>();
     this.seriesMap = new HashMap<>();
@@ -72,7 +69,6 @@ public class ChartPanel {
     this.tickSeconds = appConfig.getTickSeconds();
     this.timeline = buildTimeline();
     this.appConfig = appConfig;
-    this.hardwareNames = hardwareNames;
 
     List<ChartGroup> groups = buildGroups(rows);
     for (ChartGroup group : groups) {
@@ -107,58 +103,34 @@ public class ChartPanel {
     List<ChartGroup> groups = new ArrayList<>();
 
     if (appConfig.isChartCpuEnabled()) {
-      groups.add(ChartGroup.builder()
-          .title("Temperature (°C)")
-          .metricKeys(List.of(
-              MetricKey.Cpu.TEMPERATURE.key(),
-              MetricKey.Gpu.TEMPERATURE.key(),
-              MetricKey.Gpu.VRAM_TEMPERATURE.key(),
-              MetricKey.Disk.NVME_TEMPERATURE.key(),
-              MetricKey.Disk.SSD_TEMPERATURE.key()))
-          .seriesColors(List.of(
-              appConfig.getColorCpu(),
-              appConfig.getColorGpu(),
-              appConfig.getColorVram(),
-              appConfig.getColorNvme(),
-              appConfig.getColorSata()))
-          .seriesLabels(List.of(
-              hardwareNames.cpuModel(),
-              hardwareNames.gpuModel(),
-              "VRAM",
-              hardwareNames.nvmeModel(),
-              hardwareNames.sataModel()))
-          .build());
+      groups.add(new ChartGroup(
+          "Temperature (°C)",
+          List.of(MetricKey.Cpu.TEMPERATURE.key(), MetricKey.Gpu.TEMPERATURE.key(),
+              MetricKey.Gpu.VRAM_TEMPERATURE.key(), MetricKey.Disk.NVME_TEMPERATURE.key(),
+              MetricKey.Disk.SSD_TEMPERATURE.key()),
+          List.of(appConfig.getColorCpu(), appConfig.getColorGpu(), appConfig.getColorVram(),
+              appConfig.getColorNvme(), appConfig.getColorSata()),
+          List.of("CPU", "GPU", "VRAM", "NVMe", "SSD")
+      ));
     }
     if (appConfig.isChartLoadEnabled()) {
-      groups.add(ChartGroup.builder()
-          .title("Load (%)")
-          .metricKeys(List.of(
-              MetricKey.Cpu.LOAD.key(),
-              MetricKey.Gpu.LOAD.key(),
-              MetricKey.Gpu.VRAM_LOAD.key()))
-          .seriesColors(List.of(
-              appConfig.getColorCpu(),
-              appConfig.getColorGpu(),
-              appConfig.getColorVram()))
-          .seriesLabels(List.of(
-              hardwareNames.cpuModel(),
-              hardwareNames.gpuModel(),
-              "VRAM"))
-          .build());
+      groups.add(new ChartGroup(
+          "Load (%)",
+          List.of(MetricKey.Cpu.LOAD.key(), MetricKey.Gpu.LOAD.key(),
+              MetricKey.Gpu.VRAM_LOAD.key()),
+          List.of(appConfig.getColorCpu(), appConfig.getColorGpu(), appConfig.getColorVram()),
+          List.of("CPU", "GPU", "VRAM")
+      ));
     }
     if (appConfig.isChartMemoryEnabled()) {
-      groups.add(ChartGroup.builder()
-          .title("Memory (GB)")
-          .metricKeys(List.of(
-              MetricKey.Mem.USED.key(),
-              MetricKey.Mem.SWAP_USED.key(),
-              MetricKey.Gpu.VRAM_USED.key()))
-          .seriesColors(List.of(
-              appConfig.getColorMemoryUsed(),
-              appConfig.getColorSwapUsed(),
-              appConfig.getColorVram()))
-          .seriesLabels(List.of("RAM", "Swap", "VRAM"))
-          .build());
+      groups.add(new ChartGroup(
+          "Memory (GB)",
+          List.of(MetricKey.Mem.USED.key(), MetricKey.Mem.SWAP_USED.key(),
+              MetricKey.Gpu.VRAM_USED.key()),
+          List.of(appConfig.getColorMemoryUsed(), appConfig.getColorSwapUsed(),
+              appConfig.getColorVram()),
+          List.of("RAM", "Swap", "VRAM")
+      ));
     }
     if (appConfig.isChartFrequencyEnabled()) {
       List<String> coreKeys = new ArrayList<>();
@@ -177,12 +149,7 @@ public class ChartPanel {
         }
       }
       if (!coreKeys.isEmpty()) {
-        groups.add(ChartGroup.builder()
-            .title("Frequencies (GHz)")
-            .metricKeys(coreKeys)
-            .seriesColors(coreColors)
-            .seriesLabels(coreLabels)
-            .build());
+        groups.add(new ChartGroup("Frequencies (GHz)", coreKeys, coreColors, coreLabels));
       }
     }
 

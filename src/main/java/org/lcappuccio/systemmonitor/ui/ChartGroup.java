@@ -19,8 +19,4 @@ public record ChartGroup(
     List<String> metricKeys,
     List<String> seriesColors,
     List<String> seriesLabels
-) {
-  public static ChartGroupBuilder builder() {
-    return new ChartGroupBuilder();
-  }
-}
+) {}
