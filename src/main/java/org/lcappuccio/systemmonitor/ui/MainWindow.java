@@ -158,10 +158,10 @@ public class MainWindow {
         MetricRow row = getTreeTableRow().getItem();
         row.getColor().ifPresentOrElse(
             color -> {
-              Label dot = new Label("● ");
-              dot.setStyle("-fx-text-fill: " + color + "; -fx-font-size: 10px;");
-              Label name = new Label(row.getMetric());
-              setGraphic(new HBox(dot, name));
+              String label = "[" + row.getMetric() + "]";
+              Label bracket = new Label(label);
+              bracket.setStyle("-fx-text-fill: " + color + "; -fx-font-weight: bold;");
+              setGraphic(bracket);
               setText(null);
             },
             () -> {
@@ -194,8 +194,8 @@ public class MainWindow {
     treeTable.setShowRoot(false);
     treeTable.setColumnResizePolicy(TreeTableView.CONSTRAINED_RESIZE_POLICY);
 
-    metricCol.prefWidthProperty().bind(treeTable.widthProperty().multiply(0.60));
-    valueCol.prefWidthProperty().bind(treeTable.widthProperty().multiply(0.40));
+    metricCol.prefWidthProperty().bind(treeTable.widthProperty().multiply(0.40));
+    valueCol.prefWidthProperty().bind(treeTable.widthProperty().multiply(0.60));
 
     treeTable.setPlaceholder(new javafx.scene.control.Label("No data available"));
 
