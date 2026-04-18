@@ -203,7 +203,7 @@ public class ChartPanel {
           .append("; -fx-stroke-width: 1.5px; }\n");
       sb.append(".default-color").append(i)
           .append(".chart-legend-item-symbol { -fx-background-color: ").append(color)
-          .append(", white; }\n");
+          .append(";}\n");
     }
     return sb.toString();
   }
