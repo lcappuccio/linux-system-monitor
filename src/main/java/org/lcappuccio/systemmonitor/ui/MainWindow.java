@@ -156,19 +156,8 @@ public class MainWindow {
           return;
         }
         MetricRow row = getTreeTableRow().getItem();
-        row.getColor().ifPresentOrElse(
-            color -> {
-              String label = "[" + row.getMetric() + "]";
-              Label bracket = new Label(label);
-              bracket.setStyle("-fx-text-fill: " + color + "; -fx-font-weight: bold;");
-              setGraphic(bracket);
-              setText(null);
-            },
-            () -> {
-              setGraphic(null);
-              setText(row.getMetric());
-            }
-        );
+        setText(row.getMetric());
+        setGraphic(null);
       }
     });
     metricCol.setPrefWidth(300);
