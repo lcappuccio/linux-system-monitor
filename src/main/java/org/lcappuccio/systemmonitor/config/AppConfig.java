@@ -71,7 +71,7 @@ public final class AppConfig {
 
     this.pollIntervalDefault = parseInt(props, "poll.interval.default", 2);
     this.pollIntervalFilesystem = parseInt(props, "poll.interval.filesystem", 60);
-    this.pollIntervalDiskTemp = parseInt(props, "poll.interval.disk.temp", 15);
+    this.pollIntervalDiskTemp = parseInt(props, "poll.interval.disk.temp", 60);
 
     this.colorCpu = props.getProperty("chart.color.cpu", "#0A6FC2");
     this.colorGpu = props.getProperty("chart.color.gpu", "#F44336");

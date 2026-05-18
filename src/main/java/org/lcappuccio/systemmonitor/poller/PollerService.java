@@ -38,7 +38,7 @@ public class PollerService {
    * @param rows                 the observable list of metric rows to update
    * @param defaultCollectors    collectors polled at default interval (2s)
    * @param filesystemCollectors collectors polled at filesystem interval (60s)
-   * @param diskTempCollectors   collectors polled at disk temperature interval (15s)
+   * @param diskTempCollectors collectors polled at disk temperature interval (60s)
    */
   public PollerService(AppConfig config, ObservableList<MetricRow> rows,
       List<Collector<?>> defaultCollectors, List<Collector<?>> filesystemCollectors,
@@ -79,8 +79,7 @@ public class PollerService {
    * <p>Schedules three separate executor threads:
    * <ul>
    *   <li>Default collectors (CPU, GPU, memory, network) at 2-second intervals</li>
-   *   <li>Filesystem collectors at 60-second intervals</li>
-   *   <li>Disk temperature collectors at 15-second intervals</li>
+* <li>Filesystem and disk temperature collectors at 60-second intervals</li>
    * </ul>
    */
   public void start() {
