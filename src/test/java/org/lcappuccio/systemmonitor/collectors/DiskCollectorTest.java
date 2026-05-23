@@ -8,22 +8,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.lcappuccio.systemmonitor.config.AppConfig;
 import org.lcappuccio.systemmonitor.model.DiskMetrics;
 
 class DiskCollectorTest {
 
   private DiskCollector collector;
-  private AppConfig config;
 
   @BeforeEach
   void setUp() {
-    config = AppConfig.load();
-    collector = new DiskCollector(config);
+    collector = new DiskCollector();
   }
 
   @Test
@@ -84,36 +80,12 @@ class DiskCollectorTest {
   }
 
   @Test
-  void parseSmartctlLine_validLine_returnsTemperature() {
-    String line = "194 Temperature_Celsius     0x0022   062   053   000    Old_age   Always       -       42";
-    double result = DiskCollector.parseSmartctlLine(line);
-    assertEquals(42.0, result);
-  }
-
-  @Test
-  void parseSmartctlLine_tooFewParts_returnsNaN() {
-    String line = "194 Temperature_Celsius     0x0022   062";
-    double result = DiskCollector.parseSmartctlLine(line);
-    assertTrue(Double.isNaN(result));
-  }
-
-  @Test
-  void parseSmartctlLine_nonNumericTemp_returnsNaN() {
-    String line = "194 Temperature_Celsius     0x0022   062   053   000    Old_age   Always       -       N/A";
-    double result = DiskCollector.parseSmartctlLine(line);
-    assertTrue(Double.isNaN(result));
-  }
-
-  @Test
-  void parseSmartctlLine_negativeTemperature() {
-    String line = "194 Temperature_Celsius     0x0022   062   053   000    Old_age   Always       -       -5";
-    double result = DiskCollector.parseSmartctlLine(line);
-    assertEquals(-5.0, result);
+  void getDiskLabels_returnsEmptyBeforeInitialize() {
+    assertTrue(collector.getDiskLabels().isEmpty());
   }
 
   @Test
   void discoverNvmeModel_noNvmeBlock_returnsNull(@TempDir Path tempDir) {
-    // empty block directory — no nvme entries
     assertNull(DiskCollector.discoverNvmeModel(tempDir));
   }
 
@@ -136,47 +108,8 @@ class DiskCollectorTest {
   }
 
   @Test
-  void discoverSataModel_modelExists_returnsModel(@TempDir Path tempDir) throws IOException {
-    Path deviceDir = tempDir.resolve("sda/device");
-    Files.createDirectories(deviceDir);
-    Files.writeString(deviceDir.resolve("model"), "WDC WD10EZEX-00WN4A0");
-
-    assertEquals("WDC WD10EZEX-00WN4A0",
-        DiskCollector.discoverSataModel("sda", tempDir));
-  }
-
-  @Test
-  void discoverSataModel_noModelFile_returnsNull(@TempDir Path tempDir) {
-    assertNull(DiskCollector.discoverSataModel("sdb", tempDir));
-  }
-
-  @Test
-  void discoverSataModel_ioErrorOnRead_returnsNull(@TempDir Path tempDir) throws IOException {
-    // model file exists but is a directory, causing read failure
-    Files.createDirectories(tempDir.resolve("sdc/device/model"));
-
-    assertNull(DiskCollector.discoverSataModel("sdc", tempDir));
-  }
-
-  @Test
-  void listConstructor_storesDevices() {
-    // just verify the test-only constructor doesn't crash
-    DiskCollector collector = new DiskCollector(List.of("/dev/sda", "/dev/sdb"));
-    assertEquals(CollectorStatus.UNAVAILABLE, collector.getStatus());
-  }
-
-  @Test
   void collect_returnsEmptyWhenUnavailable() {
-    AppConfig cfg = AppConfig.load();
-    DiskCollector unavailableCollector = new DiskCollector(cfg);
-    assertEquals(CollectorStatus.UNAVAILABLE, unavailableCollector.getStatus());
-    assertTrue(unavailableCollector.collect().isEmpty());
+    assertEquals(CollectorStatus.UNAVAILABLE, collector.getStatus());
+    assertTrue(collector.collect().isEmpty());
   }
-
-  @Test
-  void getDiskLabels_returnsEmptyBeforeInitialize() {
-    assertTrue(collector.getDiskLabels().isEmpty());
-  }
-
-
 }

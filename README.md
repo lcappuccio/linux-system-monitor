@@ -15,13 +15,8 @@ Displays CPU, GPU, memory, storage, filesystem, and network statistics in a live
 - JDK 21+
 - Maven 3.9+
 - GPU metrics are targeted at AMD, I do not have an nvidia or intel GPU to test
-- `smartctl` (for SATA drive temperatures), with the following sudoers rule:
 
-```
-$YOUR_USER_HERE ALL=(ALL) NOPASSWD: /usr/sbin/smartctl
-```
-
-All metrics are read from standard Linux kernel interfaces (`/proc`, `/sys`). No additional drivers or user-space tools required with the exception of `smartctl` which requires sudoer access. NVMe temperatures are read from hwmon, not nvme-cli.
+All metrics are read from standard Linux kernel interfaces (`/proc`, `/sys`). No additional drivers or user-space tools required.
 
 ## Build
 
@@ -51,7 +46,7 @@ mvn javafx:run
 | CPU | Temperature, load, per-core frequency |
 | Memory | Used/total RAM, used/total swap |
 | GPU | Temperature, load, VRAM used/total, VRAM temp, VRAM load, power (PPT) |
-| Disks | Per-disk temperature (discovered by model name, NVMe + SATA) |
+| Disks | NVMe temperature (model name from sysfs) |
 | Filesystems | Used/free/total for `/`, `/home`, `/data`, `/data-backup` |
 | Network | LAN IP, link speed, upload/download rate |
 

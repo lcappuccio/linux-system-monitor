@@ -52,8 +52,7 @@ The application never crashes due to a missing device or misconfigured path.
 Other collectors and the UI continue to function normally.
 The `CollectorStatus` enum (`OK`, `DEGRADED`, `UNAVAILABLE`) tracks per-collector health.
 
-- All collectors read from sysfs/procfs or invoke external commands (`sudo smartctl`, `sudo nvme`).
-  No JNI or native bindings.
+- All collectors read from sysfs/procfs. No JNI or native bindings.
 - hwmon paths (`/sys/class/hwmon/hwmon*/`) must be **discovered at startup** by reading the `name` file,
   not hardcoded. Chip names to look for: `k10temp` (CPU), `amdgpu` (GPU), `nvme` (NVMe).
 - Disk model names are discovered at startup from `/sys/block/<dev>/device/model`. Fallback to device
@@ -65,8 +64,8 @@ The `CollectorStatus` enum (`OK`, `DEGRADED`, `UNAVAILABLE`) tracks per-collecto
 - UI updates must always go through `Platform.runLater()`.
 - Rate metrics (CPU load, net speed) require **delta calculation** between two consecutive reads.
 - Do not use `Thread.sleep()` loops — use `ScheduledExecutorService`.
-- SSD temp requires `sudo smartctl -A /dev/sdX`. NVMe temp is read from hwmon, not nvme-cli.
-- Multiple SATA devices are configured via comma-separated `disk.sata.devices`.
+- SSD temp is not currently monitored (smartctl was removed for being too I/O invasive).
+  Future re-addition should use the `drivetemp` kernel hwmon module.
 - GPU is AMD (amdgpu driver). No NVIDIA/NVML code.
 - Network interface is `enp9s0`.
 

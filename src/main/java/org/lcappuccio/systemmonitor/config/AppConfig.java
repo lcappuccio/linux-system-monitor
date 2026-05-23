@@ -35,7 +35,6 @@ public final class AppConfig {
 
   private final String netInterface;
   private final String gpuDrmPath;
-  private final List<String> diskSataDevices;
   private final String networkSpeedUnit;
   private final List<String> fsMountpoints;
   private final int pollIntervalDefault;
@@ -63,7 +62,6 @@ public final class AppConfig {
 
     this.netInterface = props.getProperty("net.interface", "enp9s0");
     this.gpuDrmPath = props.getProperty("gpu.drm.path", "/sys/class/drm/card1");
-    this.diskSataDevices = parseList(props, "disk.sata.devices", "/dev/sda,/dev/sdb");
     this.networkSpeedUnit = props.getProperty("network.speed.unit", "Kbps");
     this.fsMountpoints = Arrays.asList(props.getProperty("fs.mountpoints",
         "/,/home,/data,/data-backup").split(","));
@@ -75,7 +73,8 @@ public final class AppConfig {
     this.colorCpu = props.getProperty("chart.color.cpu", "#0A6FC2");
     this.colorGpu = props.getProperty("chart.color.gpu", "#F44336");
     this.colorVram = props.getProperty("chart.color.vram", "#FF9800");
-    this.colorDisks = parseList(props, "chart.color.disks", "#00FFFF,#00B3B3");
+    this.colorDisks = Arrays.asList(props.getProperty("chart.color.disks",
+        "#00FFFF,#00B3B3").split(","));
     this.colorMemoryUsed = props.getProperty("chart.color.memory.used", "#2EB82E");
     this.colorSwapUsed = props.getProperty("chart.color.swap.used", "#FFCCFF");
     this.colorCpuClocks = Arrays.asList(props.getProperty("chart.color.cpu.clocks",
@@ -146,14 +145,6 @@ public final class AppConfig {
     }
   }
 
-  private static List<String> parseList(Properties props, String key, String defaultVal) {
-    String raw = props.getProperty(key);
-    if (raw == null || raw.isBlank()) {
-      return Arrays.asList(defaultVal.split(","));
-    }
-    return Arrays.asList(raw.trim().split("\\s*,\\s*"));
-  }
-
   /**
    * Returns the configured history size for charts.
    *
@@ -188,15 +179,6 @@ public final class AppConfig {
    */
   public String getGpuDrmPath() {
     return gpuDrmPath;
-  }
-
-  /**
-   * Returns the list of SATA disk device paths, e.g. {@code /dev/sda}, {@code /dev/sdb}.
-   *
-   * @return SATA device paths.
-   */
-  public List<String> getDiskSataDevices() {
-    return diskSataDevices;
   }
 
   /**

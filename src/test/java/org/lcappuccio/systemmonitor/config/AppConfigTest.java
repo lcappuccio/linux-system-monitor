@@ -20,7 +20,6 @@ class AppConfigTest {
     AppConfig config = AppConfig.load();
     assertEquals("test0", config.getNetInterface());
     assertEquals("/sys/test", config.getGpuDrmPath());
-    assertEquals("/dev/test", config.getDiskSataDevices().get(0));
     assertEquals(99, config.getPollIntervalDefault());
     assertEquals(88, config.getPollIntervalFilesystem());
     assertEquals(77, config.getPollIntervalDiskTemp());
@@ -41,7 +40,6 @@ class AppConfigTest {
     AppConfig config = AppConfig.load();
     assertEquals("test0", config.getNetInterface());
     assertEquals("/sys/test", config.getGpuDrmPath());
-    assertEquals("/dev/test", config.getDiskSataDevices().get(0));
   }
 
   @Test
