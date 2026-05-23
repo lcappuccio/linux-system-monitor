@@ -62,7 +62,8 @@ public class ChartPanel {
    * @param cpuLabel  the CPU model name for chart legends
    * @param gpuLabel  the GPU model name for chart legends
    */
-  public ChartPanel(ObservableList<MetricRow> rows, AppConfig appConfig, String cpuLabel, String gpuLabel) {
+  public ChartPanel(ObservableList<MetricRow> rows, AppConfig appConfig,
+      String cpuLabel, String gpuLabel) {
     this.history = new HashMap<>();
     this.lastKnownValue = new HashMap<>();
     this.seriesMap = new HashMap<>();

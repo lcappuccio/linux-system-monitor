@@ -64,7 +64,9 @@ public class GpuCollector implements Collector<GpuMetrics> {
   }
 
   private void discoverGpuModel() {
-    if (drmPath == null) return;
+    if (drmPath == null) {
+      return;
+    }
     Path productName = Paths.get(drmPath, "device", "product_name");
     if (Files.exists(productName)) {
       try {
