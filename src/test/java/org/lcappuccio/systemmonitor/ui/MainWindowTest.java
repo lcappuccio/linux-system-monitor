@@ -31,20 +31,20 @@ class MainWindowTest {
   @Test
   void constructor_doesNotThrow() {
     AppConfig config = AppConfig.load();
-    assertDoesNotThrow(() -> new MainWindow(config));
+    assertDoesNotThrow(() -> new MainWindow(config, "0.0.0"));
   }
 
   @Test
   void getRoot_doesNotThrow() {
     AppConfig config = AppConfig.load();
-    MainWindow window = new MainWindow(config);
+    MainWindow window = new MainWindow(config, "0.0.0");
     assertDoesNotThrow(window::getRoot);
   }
 
   @Test
   void getRoot_returnsNonNull() {
     AppConfig config = AppConfig.load();
-    MainWindow window = new MainWindow(config);
+    MainWindow window = new MainWindow(config, "0.0.0");
     Parent root = window.getRoot();
     assertNotNull(root);
   }
@@ -52,7 +52,7 @@ class MainWindowTest {
   @Test
   void shutdown_doesNotThrow() {
     AppConfig config = AppConfig.load();
-    MainWindow window = new MainWindow(config);
+    MainWindow window = new MainWindow(config, "0.0.0");
     assertDoesNotThrow(window::shutdown);
   }
 }

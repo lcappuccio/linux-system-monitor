@@ -74,11 +74,122 @@ public class GpuCollector implements Collector<GpuMetrics> {
         if (!name.isEmpty()) {
           gpuModel = name;
           LOG.info("Discovered GPU model: {}", gpuModel);
+          return;
         }
       } catch (IOException e) {
         LOG.warn("Failed to read GPU product_name: {}", e.getMessage());
       }
     }
+    discoverGpuModelFromPciIds();
+  }
+
+  private void discoverGpuModelFromPciIds() {
+    String vendor = readSysfsId("vendor");
+    String device = readSysfsId("device");
+    if (vendor == null || device == null) {
+      return;
+    }
+    Path pciIds = findPciIdsPath();
+    if (pciIds == null) {
+      LOG.debug("No pci.ids file found, falling back to hex ID");
+      gpuModel = formatHexLabel(vendor, device);
+      return;
+    }
+    String deviceName = lookupInPciIds(pciIds, vendor, device);
+    if (deviceName != null) {
+      gpuModel = deviceName;
+      LOG.info("Discovered GPU model from pci.ids: {}", gpuModel);
+    } else {
+      gpuModel = formatHexLabel(vendor, device);
+      LOG.info("GPU device {}/{} not in pci.ids, using hex label: {}", vendor, device, gpuModel);
+    }
+  }
+
+  static String formatHexLabel(String vendor, String device) {
+    if ("1002".equals(vendor)) {
+      return "AMD (" + device + ")";
+    }
+    String vendorName = vendorToName(vendor);
+    if (vendorName != null) {
+      return vendorName + " (" + device + ")";
+    }
+    return vendor + ":" + device;
+  }
+
+  private String readSysfsId(String name) {
+    try {
+      Path path = Paths.get(drmPath, "device", name);
+      if (Files.exists(path)) {
+        String raw = Files.readString(path).trim();
+        if (raw.startsWith("0x") || raw.startsWith("0X")) {
+          return raw.substring(2).toLowerCase();
+        }
+        return raw.toLowerCase();
+      }
+    } catch (IOException e) {
+      LOG.debug("Failed to read {}: {}", name, e.getMessage());
+    }
+    return null;
+  }
+
+  static Path findPciIdsPath() {
+    Path[] candidates = {
+        Paths.get("/usr/share/misc/pci.ids"),
+        Paths.get("/usr/share/hwdata/pci.ids")
+    };
+    for (Path candidate : candidates) {
+      if (Files.exists(candidate)) {
+        return candidate;
+      }
+    }
+    return null;
+  }
+
+  static String lookupInPciIds(Path pciIds, String vendorId, String deviceId) {
+    try (var lines = Files.lines(pciIds)) {
+      String currentVendor = null;
+      boolean inVendorBlock = false;
+      String expectedVendorPrefix = vendorId + "  ";
+      String expectedDevicePrefix = "\t" + deviceId + "  ";
+      for (String line : (Iterable<String>) lines::iterator) {
+        if (line.isEmpty() || line.startsWith("#")) {
+          continue;
+        }
+        if (!line.startsWith("\t")) {
+          currentVendor = line.length() >= 5 ? line.substring(0, 4) : null;
+          inVendorBlock = expectedVendorPrefix.equals(
+              line.length() >= 6 ? line.substring(0, 6) : null);
+        } else if (inVendorBlock && line.startsWith("\t") && !line.startsWith("\t\t")) {
+          if (line.length() >= 7 && expectedDevicePrefix.equals(
+              line.substring(0, 7))) {
+            return line.substring(7).trim();
+          }
+        }
+      }
+    } catch (IOException e) {
+      LOG.debug("Failed to read pci.ids: {}", e.getMessage());
+    }
+    return null;
+  }
+
+  private static String vendorToName(String vendorId) {
+    Path pciIds = findPciIdsPath();
+    if (pciIds == null) {
+      return null;
+    }
+    String prefix = vendorId + "  ";
+    try (var lines = Files.lines(pciIds)) {
+      for (String line : (Iterable<String>) lines::iterator) {
+        if (!line.isEmpty() && !line.startsWith("#") && !line.startsWith("\t")) {
+          if (line.length() >= 6 && line.startsWith(prefix)) {
+            return line.substring(6).trim();
+          }
+        }
+      }
+    } catch (IOException e) {
+      LOG.debug("Failed to read pci.ids for vendor name: {}", e.getMessage());
+    }
+    return null;
   }
 
   private void discoverHwmon() {
