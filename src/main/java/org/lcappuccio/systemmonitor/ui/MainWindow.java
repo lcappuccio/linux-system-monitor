@@ -78,7 +78,11 @@ public class MainWindow {
 
     populateRows(config);
 
-    chartPanel = new ChartPanel(rows, config);
+    String cpuLabel = cpuCollector.getCpuModel() != null
+        ? cpuCollector.getCpuModel() : "CPU";
+    String gpuLabel = gpuCollector.getGpuModel() != null
+        ? gpuCollector.getGpuModel() : "GPU";
+    chartPanel = new ChartPanel(rows, config, cpuLabel, gpuLabel);
 
     TreeTableView<MetricRow> treeTable = buildTreeTable();
 
@@ -192,8 +196,10 @@ public class MainWindow {
   }
 
   private void populateRows(AppConfig config) {
+    String cpuLabel = cpuCollector.getCpuModel() != null
+        ? cpuCollector.getCpuModel() : "CPU";
     MetricRow cpuNode = new MetricRow(
-        "CPU", "CPU", "", true, null,
+        "CPU", cpuLabel, "", true, null,
         config.getColorCpu());
     TreeItem<MetricRow> cpuTreeItem = new TreeItem<>(cpuNode);
     rootItem.getChildren().add(cpuTreeItem);
@@ -216,8 +222,10 @@ public class MainWindow {
       cpuTreeItem.getChildren().add(new TreeItem<>(coreRow));
     }
 
+    String gpuNodeLabel = gpuCollector.getGpuModel() != null
+        ? gpuCollector.getGpuModel() : "GPU";
     MetricRow gpuNode = new MetricRow(
-        "GPU", "GPU", "", true, null,
+        "GPU", gpuNodeLabel, "", true, null,
         config.getColorGpu());
     TreeItem<MetricRow> gpuTreeItem = new TreeItem<>(gpuNode);
     rootItem.getChildren().add(gpuTreeItem);
