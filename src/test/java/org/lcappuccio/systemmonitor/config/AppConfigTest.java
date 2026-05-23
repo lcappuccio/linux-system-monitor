@@ -20,7 +20,7 @@ class AppConfigTest {
     AppConfig config = AppConfig.load();
     assertEquals("test0", config.getNetInterface());
     assertEquals("/sys/test", config.getGpuDrmPath());
-    assertEquals("/dev/test", config.getDiskSataDevice());
+    assertEquals("/dev/test", config.getDiskSataDevices().get(0));
     assertEquals(99, config.getPollIntervalDefault());
     assertEquals(88, config.getPollIntervalFilesystem());
     assertEquals(77, config.getPollIntervalDiskTemp());
@@ -30,9 +30,10 @@ class AppConfigTest {
   void load_parsesFsMountpoints() {
     AppConfig config = AppConfig.load();
     assertNotNull(config.getFsMountpoints());
-    assertEquals(2, config.getFsMountpoints().size());
+    assertEquals(3, config.getFsMountpoints().size());
     assertEquals("/", config.getFsMountpoints().get(0));
     assertEquals("/tmp", config.getFsMountpoints().get(1));
+    assertEquals("/data-backup", config.getFsMountpoints().get(2));
   }
 
   @Test
@@ -40,7 +41,7 @@ class AppConfigTest {
     AppConfig config = AppConfig.load();
     assertEquals("test0", config.getNetInterface());
     assertEquals("/sys/test", config.getGpuDrmPath());
-    assertEquals("/dev/test", config.getDiskSataDevice());
+    assertEquals("/dev/test", config.getDiskSataDevices().get(0));
   }
 
   @Test
@@ -63,8 +64,8 @@ class AppConfigTest {
     assertEquals("#0A6FC2", config.getColorCpu());
     assertEquals("#F44336", config.getColorGpu());
     assertEquals("#FF9800", config.getColorVram());
-    assertEquals("#9E9E9E", config.getColorNvme());
-    assertEquals("#607D8B", config.getColorSata());
+    assertEquals("#9E9E9E", config.getColorDisks().get(0));
+    assertEquals("#607D8B", config.getColorDisks().get(1));
     assertEquals("#2EB82E", config.getColorMemoryUsed());
     assertEquals("#FFCCFF", config.getColorSwapUsed());
   }

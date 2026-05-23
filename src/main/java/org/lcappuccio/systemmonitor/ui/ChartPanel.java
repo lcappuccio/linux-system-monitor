@@ -103,14 +103,36 @@ public class ChartPanel {
     List<ChartGroup> groups = new ArrayList<>();
 
     if (appConfig.isChartCpuEnabled()) {
+      List<String> tempKeys = new ArrayList<>();
+      List<String> tempColors = new ArrayList<>();
+      List<String> tempLabels = new ArrayList<>();
+
+      tempKeys.add(MetricKey.Cpu.TEMPERATURE.key());
+      tempColors.add(appConfig.getColorCpu());
+      tempLabels.add("CPU");
+
+      tempKeys.add(MetricKey.Gpu.TEMPERATURE.key());
+      tempColors.add(appConfig.getColorGpu());
+      tempLabels.add("GPU");
+
+      tempKeys.add(MetricKey.Gpu.VRAM_TEMPERATURE.key());
+      tempColors.add(appConfig.getColorVram());
+      tempLabels.add("VRAM");
+
+      List<String> diskColors = appConfig.getColorDisks();
+      int colorIdx = 0;
+      for (MetricRow row : rows) {
+        if ("Disks".equals(row.getSection()) && !row.isHardwareNode()) {
+          String key = row.getSection() + "." + row.getMetric();
+          tempKeys.add(key);
+          tempColors.add(diskColors.get(colorIdx % diskColors.size()));
+          tempLabels.add(row.getMetric());
+          colorIdx++;
+        }
+      }
+
       groups.add(new ChartGroup(
-          "Temperature (°C)",
-          List.of(MetricKey.Cpu.TEMPERATURE.key(), MetricKey.Gpu.TEMPERATURE.key(),
-              MetricKey.Gpu.VRAM_TEMPERATURE.key(), MetricKey.Disk.NVME_TEMPERATURE.key(),
-              MetricKey.Disk.SSD_TEMPERATURE.key()),
-          List.of(appConfig.getColorCpu(), appConfig.getColorGpu(), appConfig.getColorVram(),
-              appConfig.getColorNvme(), appConfig.getColorSata()),
-          List.of("CPU", "GPU", "VRAM", "NVMe", "SSD")
+          "Temperature (°C)", tempKeys, tempColors, tempLabels
       ));
     }
     if (appConfig.isChartLoadEnabled()) {

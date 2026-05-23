@@ -29,7 +29,7 @@ org.lcappuccio.systemmonitor
 │   ├── CpuCollector.java      # /proc/stat, /sys/.../cpufreq, hwmon (k10temp)
 │   ├── MemCollector.java      # /proc/meminfo
 │   ├── GpuCollector.java      # /sys/class/drm/card1/..., hwmon (amdgpu)
-│   ├── DiskCollector.java     # hwmon (nvme), sudo smartctl (sata)
+│   ├── DiskCollector.java     # hwmon (nvme), sudo smartctl (sata*)
 │   ├── FsCollector.java       # java.nio.file.FileStore
 │   └── NetCollector.java      # /proc/net/dev, /sys/class/net/enp9s0/...
 └── poller/
@@ -40,8 +40,9 @@ org.lcappuccio.systemmonitor
 
 The application loads `~/.config/linux-system-monitor/config.properties` at startup.
 If absent, built-in defaults are used and a `WARN` is logged.
-Configurable values: `net.interface`, `gpu.drm.path`, `disk.sata.device`,
-`fs.mountpoints`, `poll.interval.default`, `poll.interval.filesystem`, `poll.interval.disk.temp`.
+Configurable values: `net.interface`, `gpu.drm.path`, `disk.sata.devices` (comma-separated
+list), `fs.mountpoints`, `poll.interval.default`, `poll.interval.filesystem`,
+`poll.interval.disk.temp`, `chart.color.disks` (comma-separated list, cycled per disk).
 
 ## Fault Tolerance
 
@@ -55,13 +56,17 @@ The `CollectorStatus` enum (`OK`, `DEGRADED`, `UNAVAILABLE`) tracks per-collecto
   No JNI or native bindings.
 - hwmon paths (`/sys/class/hwmon/hwmon*/`) must be **discovered at startup** by reading the `name` file,
   not hardcoded. Chip names to look for: `k10temp` (CPU), `amdgpu` (GPU), `nvme` (NVMe).
+- Disk model names are discovered at startup from `/sys/block/<dev>/device/model`. Fallback to device
+  basename if unavailable.
+- `DiskMetrics` returns a `Map<String, Double>` keyed by model name, not fixed fields.
 - All file reads must handle IOException gracefully — return Optional.empty() or empty collection, log the error, 
  never crash the poller.
 - Polling interval is **2 seconds** for all metrics except filesystems (60s) and storage temps (15s).
 - UI updates must always go through `Platform.runLater()`.
 - Rate metrics (CPU load, net speed) require **delta calculation** between two consecutive reads.
 - Do not use `Thread.sleep()` loops — use `ScheduledExecutorService`.
-- SSD temp requires `sudo smartctl -A /dev/sda`. NVMe temp is read from hwmon, not nvme-cli.
+- SSD temp requires `sudo smartctl -A /dev/sdX`. NVMe temp is read from hwmon, not nvme-cli.
+- Multiple SATA devices are configured via comma-separated `disk.sata.devices`.
 - GPU is AMD (amdgpu driver). No NVIDIA/NVML code.
 - Network interface is `enp9s0`.
 
@@ -116,4 +121,5 @@ Implementations may import freely; interfaces may not.
 
 **No mutable result objects.** Collector output must be immutable records
 (`CpuMetrics`, `GpuMetrics`, `MemoryMetrics`, `DiskMetrics`, `FileSystemMetrics`, `NetworkMetrics`).
+`DiskMetrics` wraps an unmodifiable `Map<String, Double>` keyed by disk model name.
 Do not pass mutable containers or shared state between the poller and the UI.

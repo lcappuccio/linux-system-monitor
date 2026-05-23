@@ -273,27 +273,22 @@ public class MainWindow {
     rows.add(memSwapRow);
     memTreeItem.getChildren().add(new TreeItem<>(memSwapRow));
 
-    MetricRow nvmeNode = new MetricRow(
-        "Disks", "NVMe", "", true, null,
-        config.getColorNvme());
-    TreeItem<MetricRow> nvmeTreeItem = new TreeItem<>(nvmeNode);
-    rootItem.getChildren().add(nvmeTreeItem);
+    MetricRow disksNode = new MetricRow(
+        "Disks", "Disks", "", true, null,
+        config.getColorDisks().get(0));
+    TreeItem<MetricRow> disksTreeItem = new TreeItem<>(disksNode);
+    rootItem.getChildren().add(disksTreeItem);
 
-    MetricRow nvmeTempRow = new MetricRow(
-        "Disks", "NVMe Temperature", "—", false, "Disks");
-    rows.add(nvmeTempRow);
-    nvmeTreeItem.getChildren().add(new TreeItem<>(nvmeTempRow));
-
-    MetricRow ssdNode = new MetricRow(
-        "Disks", "SSD", "", true, null,
-        config.getColorSata());
-    TreeItem<MetricRow> ssdTreeItem = new TreeItem<>(ssdNode);
-    rootItem.getChildren().add(ssdTreeItem);
-
-    MetricRow ssdTempRow = new MetricRow(
-        "Disks", "SSD Temperature", "—", false, "Disks");
-    rows.add(ssdTempRow);
-    ssdTreeItem.getChildren().add(new TreeItem<>(ssdTempRow));
+    List<String> diskLabels = diskCollector.getDiskLabels();
+    List<String> diskColors = config.getColorDisks();
+    for (int i = 0; i < diskLabels.size(); i++) {
+      String label = diskLabels.get(i);
+      String color = diskColors.get(i % diskColors.size());
+      MetricRow diskRow = new MetricRow(
+          "Disks", label, "—", false, "Disks", color);
+      rows.add(diskRow);
+      disksTreeItem.getChildren().add(new TreeItem<>(diskRow));
+    }
 
     MetricRow fsNode = new MetricRow(
         "Filesystems", "Filesystems", "", true, null, null);
