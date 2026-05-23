@@ -15,8 +15,18 @@ Displays CPU, GPU, memory, storage, filesystem, and network statistics in a live
 - JDK 21+
 - Maven 3.9+
 - GPU metrics are targeted at AMD, I do not have an nvidia or intel GPU to test
+- **SATA SSD temperature monitoring** requires the `drivetemp` kernel module.
+  Load it and add it to `/etc/modules` to persist across reboots:
 
-All metrics are read from standard Linux kernel interfaces (`/proc`, `/sys`). No additional drivers or user-space tools required.
+  ```bash
+  # Load now
+  sudo modprobe drivetemp
+
+  # Persist across reboots
+  echo "drivetemp" | sudo tee -a /etc/modules
+  ```
+
+All metrics are read from standard Linux kernel interfaces (`/proc`, `/sys`). No additional user-space tools required.
 
 ## Build
 
