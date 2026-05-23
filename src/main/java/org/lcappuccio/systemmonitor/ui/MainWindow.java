@@ -71,7 +71,7 @@ public class MainWindow {
     this.gpuCollector = new GpuCollector(config);
     this.gpuCollector.initialize();
 
-    this.diskCollector = new DiskCollector(config);
+    this.diskCollector = new DiskCollector();
     this.diskCollector.initialize();
 
     this.rootItem = new TreeItem<>(new MetricRow("System", "Metrics", ""));
