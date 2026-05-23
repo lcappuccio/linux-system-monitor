@@ -7,15 +7,23 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 import org.lcappuccio.systemmonitor.config.AppConfig;
 import org.lcappuccio.systemmonitor.model.DiskMetrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Collects NVMe and SATA SSD temperature metrics.
+ * Collects temperature metrics for NVMe and SATA storage devices.
+ *
+ * <p>Discovers all available storage devices at startup, resolves their model names
+ * from sysfs, and provides ordered disk labels for UI row creation.
  */
 public class DiskCollector implements Collector<DiskMetrics> {
 
@@ -23,35 +31,37 @@ public class DiskCollector implements Collector<DiskMetrics> {
   private static final String HWMON_PATH = "/sys/class/hwmon";
   private static final double NO_TEMP = Double.NaN;
 
-  private final String sataDevice;
-  private String nvmeHwmonPath = null;
+  private final List<String> sataDevices;
   private String nvmeTempPath = null;
+  private String nvmeModel = null;
+
+  private final List<DiskInfo> disks = new ArrayList<>();
+  private final List<String> diskLabels = new ArrayList<>();
 
   private CollectorStatus status = CollectorStatus.UNAVAILABLE;
 
+  private record DiskInfo(String label, boolean isNvme, int index) {}
+
   public DiskCollector(AppConfig config) {
-    this.sataDevice = config.getDiskSataDevice();
+    this.sataDevices = config.getDiskSataDevices();
   }
 
   @Override
   public void initialize() {
-    discoverNvmeHwmon();
-    boolean sataValid = checkSataDevice();
+    discoverNvme();
+    discoverSataDisks();
 
-    if (nvmeHwmonPath == null && !sataValid) {
-      LOG.error("DiskCollector: neither NVMe nor SATA available");
+    if (disks.isEmpty()) {
+      LOG.error("DiskCollector: no storage devices found");
       status = CollectorStatus.UNAVAILABLE;
-    } else if (nvmeHwmonPath == null || !sataValid) {
-      LOG.warn("DiskCollector: only NVMe or SATA available, status=DEGRADED");
-      status = CollectorStatus.DEGRADED;
     } else {
       status = CollectorStatus.OK;
     }
 
-    LOG.info("DiskCollector initialized: status={}", status);
+    LOG.info("DiskCollector initialized: status={}, disks={}", status, diskLabels);
   }
 
-  private void discoverNvmeHwmon() {
+  private void discoverNvme() {
     Path hwmonDir = Paths.get(HWMON_PATH);
     if (!Files.exists(hwmonDir)) {
       return;
@@ -63,11 +73,15 @@ public class DiskCollector implements Collector<DiskMetrics> {
         if (Files.exists(nameFile)) {
           String name = Files.readString(nameFile).trim();
           if ("nvme".equals(name)) {
-            nvmeHwmonPath = hwmon.toString();
             Path tempFile = hwmon.resolve("temp1_input");
             if (Files.exists(tempFile)) {
               nvmeTempPath = tempFile.toString();
             }
+            nvmeModel = discoverNvmeModel();
+            String label = nvmeModel != null ? nvmeModel : "nvme0n1";
+            disks.add(new DiskInfo(label, true, 0));
+            diskLabels.add(label);
+            LOG.info("Discovered NVMe disk: {} (temp={})", label, nvmeTempPath);
             return;
           }
         }
@@ -77,14 +91,71 @@ public class DiskCollector implements Collector<DiskMetrics> {
     }
   }
 
-  private boolean checkSataDevice() {
-    if (sataDevice == null) {
-      return false;
+  private String discoverNvmeModel() {
+    try (Stream<Path> entries = Files.list(Paths.get("/sys/block"))) {
+      Optional<Path> nvmeBlock = entries
+          .filter(p -> p.getFileName().toString().startsWith("nvme"))
+          .findFirst();
+      if (nvmeBlock.isPresent()) {
+        Path modelFile = nvmeBlock.get().resolve("device/model");
+        if (Files.exists(modelFile)) {
+          return Files.readString(modelFile).trim();
+        }
+      }
+    } catch (IOException e) {
+      LOG.warn("Failed to read NVMe model name: {}", e.getMessage());
     }
-    if (sataDevice.startsWith("/dev/")) {
-      return Files.exists(Paths.get(sataDevice));
+    return null;
+  }
+
+  private void discoverSataDisks() {
+    for (int i = 0; i < sataDevices.size(); i++) {
+      String device = sataDevices.get(i);
+      if (device.startsWith("/dev/")) {
+        if (Files.exists(Paths.get(device))) {
+          String devName = device.substring("/dev/".length());
+          String model = discoverSataModel(devName);
+          String label = model != null ? model : devName;
+          disks.add(new DiskInfo(label, false, i));
+          diskLabels.add(label);
+          LOG.info("Discovered SATA disk: {} ({})", label, device);
+        } else {
+          LOG.warn("SATA device {} not found, skipping", device);
+        }
+      } else {
+        String fullPath = "/dev/" + device;
+        if (Files.exists(Paths.get(fullPath))) {
+          String model = discoverSataModel(device);
+          String label = model != null ? model : device;
+          disks.add(new DiskInfo(label, false, i));
+          diskLabels.add(label);
+          LOG.info("Discovered SATA disk: {} ({})", label, fullPath);
+        } else {
+          LOG.warn("SATA device {} not found, skipping", fullPath);
+        }
+      }
     }
-    return Files.exists(Paths.get("/dev/" + sataDevice));
+  }
+
+  private String discoverSataModel(String devName) {
+    Path modelFile = Paths.get("/sys/block/" + devName + "/device/model");
+    if (Files.exists(modelFile)) {
+      try {
+        return Files.readString(modelFile).trim();
+      } catch (IOException e) {
+        LOG.warn("Failed to read model for {}: {}", devName, e.getMessage());
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Returns the ordered list of disk labels (model names) for UI row creation.
+   *
+   * @return list of disk labels
+   */
+  public List<String> getDiskLabels() {
+    return diskLabels;
   }
 
   @Override
@@ -93,10 +164,13 @@ public class DiskCollector implements Collector<DiskMetrics> {
       return Optional.empty();
     }
 
-    double nvmeTemp = readNvmeTemp();
-    double sataTemp = readSataTemp();
+    Map<String, Double> temps = new LinkedHashMap<>();
+    for (DiskInfo disk : disks) {
+      double temp = disk.isNvme() ? readNvmeTemp() : readSataTemp(disk.index());
+      temps.put(disk.label(), temp);
+    }
 
-    return Optional.of(new DiskMetrics(nvmeTemp, sataTemp));
+    return Optional.of(new DiskMetrics(temps));
   }
 
   private double readNvmeTemp() {
@@ -112,8 +186,8 @@ public class DiskCollector implements Collector<DiskMetrics> {
     }
   }
 
-  private double readSataTemp() {
-    String device = sataDevice;
+  private double readSataTemp(int index) {
+    String device = sataDevices.get(index);
     if (!device.startsWith("/dev/")) {
       device = "/dev/" + device;
     }
@@ -126,7 +200,7 @@ public class DiskCollector implements Collector<DiskMetrics> {
 
       boolean exited = process.waitFor(5, TimeUnit.SECONDS);
       if (!exited || process.exitValue() != 0) {
-        LOG.error("smartctl exit code: {}", process.exitValue());
+        LOG.error("smartctl exit code for {}: {}", device, process.exitValue());
         return NO_TEMP;
       }
 
@@ -140,7 +214,7 @@ public class DiskCollector implements Collector<DiskMetrics> {
         }
       }
     } catch (IOException | InterruptedException e) {
-      LOG.error("Failed to read SATA temp: {}", e.getMessage());
+      LOG.error("Failed to read SATA temp for {}: {}", device, e.getMessage());
     } finally {
       if (process != null && process.isAlive()) {
         process.destroyForcibly();

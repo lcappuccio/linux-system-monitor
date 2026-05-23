@@ -105,27 +105,10 @@ public enum MetricKey {
   }
 
   /**
-   * Disk-related metric keys.
-   */
-  public enum Disk {
-    NVME_TEMPERATURE("NVMe Temperature"),
-    SSD_TEMPERATURE("SSD Temperature");
-
-    private final String metric;
-
-    Disk(String metric) {
-      this.metric = metric;
-    }
-
-    public String key() {
-      return MetricKey.Disks.key(metric);
-    }
-  }
-
-  /**
    * Filesystem-related metric keys (dynamic, mount-point based).
    */
   public enum Filesystem {
+
     ;
 
     public static String key(String mount) {

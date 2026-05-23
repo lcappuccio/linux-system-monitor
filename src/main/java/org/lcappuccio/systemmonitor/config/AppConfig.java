@@ -35,7 +35,7 @@ public final class AppConfig {
 
   private final String netInterface;
   private final String gpuDrmPath;
-  private final String diskSataDevice;
+  private final List<String> diskSataDevices;
   private final String networkSpeedUnit;
   private final List<String> fsMountpoints;
   private final int pollIntervalDefault;
@@ -45,8 +45,7 @@ public final class AppConfig {
   private final String colorCpu;
   private final String colorGpu;
   private final String colorVram;
-  private final String colorNvme;
-  private final String colorSata;
+  private final List<String> colorDisks;
   private final String colorMemoryUsed;
   private final String colorSwapUsed;
   private final List<String> colorCpuClocks;
@@ -64,10 +63,10 @@ public final class AppConfig {
 
     this.netInterface = props.getProperty("net.interface", "enp9s0");
     this.gpuDrmPath = props.getProperty("gpu.drm.path", "/sys/class/drm/card1");
-    this.diskSataDevice = props.getProperty("disk.sata.device", "/dev/sda");
+    this.diskSataDevices = parseList(props, "disk.sata.devices", "/dev/sda,/dev/sdb");
     this.networkSpeedUnit = props.getProperty("network.speed.unit", "Kbps");
-    this.fsMountpoints = Arrays.asList(props.getProperty("fs.mountpoints", "/,/home,/data")
-        .split(","));
+    this.fsMountpoints = Arrays.asList(props.getProperty("fs.mountpoints",
+        "/,/home,/data,/data-backup").split(","));
 
     this.pollIntervalDefault = parseInt(props, "poll.interval.default", 2);
     this.pollIntervalFilesystem = parseInt(props, "poll.interval.filesystem", 60);
@@ -76,8 +75,7 @@ public final class AppConfig {
     this.colorCpu = props.getProperty("chart.color.cpu", "#0A6FC2");
     this.colorGpu = props.getProperty("chart.color.gpu", "#F44336");
     this.colorVram = props.getProperty("chart.color.vram", "#FF9800");
-    this.colorNvme = props.getProperty("chart.color.nvme", "#9E9E9E");
-    this.colorSata = props.getProperty("chart.color.sata", "#607D8B");
+    this.colorDisks = parseList(props, "chart.color.disks", "#00FFFF,#00B3B3");
     this.colorMemoryUsed = props.getProperty("chart.color.memory.used", "#2EB82E");
     this.colorSwapUsed = props.getProperty("chart.color.swap.used", "#FFCCFF");
     this.colorCpuClocks = Arrays.asList(props.getProperty("chart.color.cpu.clocks",
@@ -148,6 +146,14 @@ public final class AppConfig {
     }
   }
 
+  private static List<String> parseList(Properties props, String key, String defaultVal) {
+    String raw = props.getProperty(key);
+    if (raw == null || raw.isBlank()) {
+      return Arrays.asList(defaultVal.split(","));
+    }
+    return Arrays.asList(raw.trim().split("\\s*,\\s*"));
+  }
+
   /**
    * Returns the configured history size for charts.
    *
@@ -185,12 +191,12 @@ public final class AppConfig {
   }
 
   /**
-   * Returns the SATA disk device path, e.g. {@code /dev/sda}.
+   * Returns the list of SATA disk device paths, e.g. {@code /dev/sda}, {@code /dev/sdb}.
    *
-   * @return SATA device path.
+   * @return SATA device paths.
    */
-  public String getDiskSataDevice() {
-    return diskSataDevice;
+  public List<String> getDiskSataDevices() {
+    return diskSataDevices;
   }
 
   /**
@@ -266,21 +272,12 @@ public final class AppConfig {
   }
 
   /**
-   * Returns the selected nvme colour for charts.
+   * Returns the list of disk colours for charts (one per disk, cycled).
    *
-   * @return the value.
+   * @return the list of hex colour strings.
    */
-  public String getColorNvme() {
-    return colorNvme;
-  }
-
-  /**
-   * Returns the selected sata colour for charts.
-   *
-   * @return the value.
-   */
-  public String getColorSata() {
-    return colorSata;
+  public List<String> getColorDisks() {
+    return colorDisks;
   }
 
   /**

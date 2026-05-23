@@ -1,14 +1,19 @@
 package org.lcappuccio.systemmonitor.model;
 
+import java.util.Collections;
+import java.util.Map;
+
 /**
  * Immutable snapshot of storage device temperatures.
  *
- * @param nvmeTempCelsius NVMe composite temperature in °C
- * @param sataTempCelsius SATA SSD temperature in °C
+ * @param temperatures map of disk label (model name) to temperature in °C
  */
 public record DiskMetrics(
-    double nvmeTempCelsius,
-    double sataTempCelsius
+    Map<String, Double> temperatures
 ) {
+
+  public DiskMetrics {
+    temperatures = Collections.unmodifiableMap(temperatures);
+  }
 
 }
