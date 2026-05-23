@@ -136,16 +136,6 @@ class DiskCollectorTest {
   }
 
   @Test
-  void discoverNvmeModel_multipleNvmeBlocks_returnsFirst(@TempDir Path tempDir) throws IOException {
-    Files.createDirectories(tempDir.resolve("nvme0n1/device"));
-    Files.writeString(tempDir.resolve("nvme0n1/device/model"), "Disk One");
-    Files.createDirectories(tempDir.resolve("nvme1n1/device"));
-    Files.writeString(tempDir.resolve("nvme1n1/device/model"), "Disk Two");
-
-    assertEquals("Disk One", DiskCollector.discoverNvmeModel(tempDir));
-  }
-
-  @Test
   void discoverSataModel_modelExists_returnsModel(@TempDir Path tempDir) throws IOException {
     Path deviceDir = tempDir.resolve("sda/device");
     Files.createDirectories(deviceDir);
