@@ -34,7 +34,7 @@ results to `MetricRow` via `Platform.runLater()`.
 ### Design
 
 - Constructor takes `AppConfig` and the `ObservableList<MetricRow>` from `MainWindow`.
-- Three separate schedules: default (2s), filesystem (60s), disk temp (15s).
+- Three separate schedules: default (2s), filesystem (60s), disk temp (60s).
 - Each collector is called in a try/catch — exceptions are logged, never propagated.
 - `shutdown()` calls `executor.shutdownNow()` with a 5-second graceful timeout.
 - No knowledge of `ChartPanel` — pushes only to `MetricRow`.
@@ -174,15 +174,18 @@ selected metric.
 ## DiskCollector
 
 **Package:** `org.lcappuccio.systemmonitor.collectors`
-**Concern:** Reports NVMe and SATA SSD temperatures.
+**Concern:** Reports NVMe and SATA SSD temperatures via hwmon.
 
 ### Design
 
 - **NVMe temp:** hwmon discovery — scans for chip name `nvme`, reads `temp1_input`
-  (Composite, millidegrees → °C). No `sudo nvme` needed.
-- **SATA temp:** `ProcessBuilder` invoking `sudo smartctl -A <diskSataDevice>`.
-  Parses output line containing `Airflow_Temperature_Cel`, extracts the 10th field.
-  Exit code must be `0` before parsing — non-zero means device unavailable.
-  Process is always destroyed in a `finally` block.
-- `initialize()` discovers NVMe hwmon path and checks SATA device path exists.
-- If only one of the two is available, status is `DEGRADED` rather than `UNAVAILABLE`.
+  (millidegrees → °C). Model name is read from `/sys/block/nvme*/device/model`.
+- **SATA temp:** hwmon discovery — scans for chip name `drivetemp` (kernel module),
+  reads `temp1_input` (millidegrees → °C). Model name is read by matching the drivetemp
+  SCSI device path to the corresponding block device in `/sys/block/sd*/device/model`.
+- No external commands (`smartctl`, `nvme` CLI) invoked — all reads are plain sysfs.
+- `drivetemp` kernel module must be loaded (`/etc/modules` or `modprobe drivetemp`)
+  for SATA temperature support.
+- `initialize()` discovers all hwmon entries. If none found, status is `UNAVAILABLE`.
+- `DiskMetrics` returns a `Map<String, Double>` keyed by disk model name, covering
+  all discovered drives (NVMe + SATA).

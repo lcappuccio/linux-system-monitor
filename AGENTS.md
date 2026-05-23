@@ -29,7 +29,7 @@ org.lcappuccio.systemmonitor
 │   ├── CpuCollector.java      # /proc/stat, /sys/.../cpufreq, hwmon (k10temp)
 │   ├── MemCollector.java      # /proc/meminfo
 │   ├── GpuCollector.java      # /sys/class/drm/card1/..., hwmon (amdgpu)
-│   ├── DiskCollector.java     # hwmon (nvme), sudo smartctl (sata*)
+│   ├── DiskCollector.java     # hwmon (nvme, drivetemp)
 │   ├── FsCollector.java       # java.nio.file.FileStore
 │   └── NetCollector.java      # /proc/net/dev, /sys/class/net/enp9s0/...
 └── poller/
@@ -54,18 +54,19 @@ The `CollectorStatus` enum (`OK`, `DEGRADED`, `UNAVAILABLE`) tracks per-collecto
 
 - All collectors read from sysfs/procfs. No JNI or native bindings.
 - hwmon paths (`/sys/class/hwmon/hwmon*/`) must be **discovered at startup** by reading the `name` file,
-  not hardcoded. Chip names to look for: `k10temp` (CPU), `amdgpu` (GPU), `nvme` (NVMe).
+  not hardcoded. Chip names to look for: `k10temp` (CPU), `amdgpu` (GPU), `nvme` (NVMe),
+  `drivetemp` (SATA SSD).
 - Disk model names are discovered at startup from `/sys/block/<dev>/device/model`. Fallback to device
   basename if unavailable.
 - `DiskMetrics` returns a `Map<String, Double>` keyed by model name, not fixed fields.
 - All file reads must handle IOException gracefully — return Optional.empty() or empty collection, log the error, 
  never crash the poller.
-- Polling interval is **2 seconds** for all metrics except filesystems (60s) and storage temps (15s).
+- Polling interval is **2 seconds** for all metrics except filesystems (60s) and storage temps (60s).
 - UI updates must always go through `Platform.runLater()`.
 - Rate metrics (CPU load, net speed) require **delta calculation** between two consecutive reads.
 - Do not use `Thread.sleep()` loops — use `ScheduledExecutorService`.
-- SSD temp is not currently monitored (smartctl was removed for being too I/O invasive).
-  Future re-addition should use the `drivetemp` kernel hwmon module.
+- SATA SSD temp is read via the `drivetemp` kernel hwmon module (no external commands).
+- NVMe temp is read via hwmon (chip name `nvme`).
 - GPU is AMD (amdgpu driver). No NVIDIA/NVML code.
 - Network interface is `enp9s0`.
 

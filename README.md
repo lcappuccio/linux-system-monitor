@@ -46,7 +46,7 @@ mvn javafx:run
 | CPU | Temperature, load, per-core frequency |
 | Memory | Used/total RAM, used/total swap |
 | GPU | Temperature, load, VRAM used/total, VRAM temp, VRAM load, power (PPT) |
-| Disks | NVMe temperature (model name from sysfs) |
+| Disks | NVMe and SATA temperatures via hwmon (nvme + drivetemp kernel module) |
 | Filesystems | Used/free/total for `/`, `/home`, `/data`, `/data-backup` |
 | Network | LAN IP, link speed, upload/download rate |
 
@@ -86,7 +86,7 @@ disk.sata.devices=/dev/sda,/dev/sdb
 fs.mountpoints=/,/home,/data,/data-backup
 poll.interval.default=2
 poll.interval.filesystem=60
-poll.interval.disk.temp=15
+poll.interval.disk.temp=60
 
 # valid values: KBps, MBps, GB/s, Kbps, Mbps, Gbps
 network.speed.unit=Kbps
