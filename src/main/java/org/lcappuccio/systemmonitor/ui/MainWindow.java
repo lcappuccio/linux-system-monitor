@@ -17,8 +17,6 @@ import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 import org.lcappuccio.systemmonitor.collectors.Collector;
 import org.lcappuccio.systemmonitor.collectors.CpuCollector;
@@ -159,11 +157,7 @@ public class MainWindow {
         }
         MetricRow row = getTreeTableRow().getItem();
         setText(row.getMetric());
-        row.getColor().ifPresentOrElse(color -> {
-          Rectangle dot = new Rectangle(10, 10);
-          dot.setFill(Color.web(color));
-          setGraphic(dot);
-        }, () -> setGraphic(null));
+        setGraphic(null);
       }
     });
     metricCol.setPrefWidth(300);
