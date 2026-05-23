@@ -15,13 +15,13 @@ Displays CPU, GPU, memory, storage, filesystem, and network statistics in a live
 - JDK 21+
 - Maven 3.9+
 - GPU metrics are targeted at AMD, I do not have an nvidia or intel GPU to test
-- `smartctl` (for SATA drives temperature only), with the following sudoers rule:
+- `smartctl` (for SATA drive temperatures), with the following sudoers rule:
 
 ```
 $YOUR_USER_HERE ALL=(ALL) NOPASSWD: /usr/sbin/smartctl
 ```
 
-All metrics are read from standard Linux kernel interfaces (`/proc`, `/sys`). No additional drivers or user-space tools required with the exception of smartctl that requires sudoer access.
+All metrics are read from standard Linux kernel interfaces (`/proc`, `/sys`). No additional drivers or user-space tools required with the exception of `smartctl` which requires sudoer access. NVMe temperatures are read from hwmon, not nvme-cli.
 
 ## Build
 
@@ -47,12 +47,12 @@ mvn javafx:run
 ## Monitored Metrics
 
 | Section | Metrics |
-|---|---|
+|---|---|---|
 | CPU | Temperature, load, per-core frequency |
 | Memory | Used/total RAM, used/total swap |
 | GPU | Temperature, load, VRAM used/total, VRAM temp, VRAM load, power (PPT) |
-| Disks | NVMe temperature, SATA SSD temperature |
-| Filesystems | Used/free/total for `/`, `/home`, `/data` |
+| Disks | Per-disk temperature (discovered by model name, NVMe + SATA) |
+| Filesystems | Used/free/total for `/`, `/home`, `/data`, `/data-backup` |
 | Network | LAN IP, link speed, upload/download rate |
 
 ## Installation
@@ -87,8 +87,8 @@ ui.theme=dark
 
 net.interface=enp9s0
 gpu.drm.path=/sys/class/drm/card1
-disk.sata.device=/dev/sda
-fs.mountpoints=/,/home,/data
+disk.sata.devices=/dev/sda,/dev/sdb
+fs.mountpoints=/,/home,/data,/data-backup
 poll.interval.default=2
 poll.interval.filesystem=60
 poll.interval.disk.temp=15
@@ -100,8 +100,7 @@ network.speed.unit=Kbps
 chart.color.cpu=#0A6FC2
 chart.color.gpu=#F44336
 chart.color.vram=#FF9800
-chart.color.nvme=#9E9E9E
-chart.color.sata=#607D8B
+chart.color.disks=#00FFFF,#00B3B3,#FF6600
 chart.color.memory.used=#2EB82E
 chart.color.swap.used=#FF00FF
 chart.color.cpu.clocks=#0A305C,#0D3C73,#0F488A,#1254A1,#1461B8,#176DCF,#176DCF,#3086E8,#4794EB,#5EA1ED,#75AEF0,#8CBCF2,#A3C9F5,#BAD7F7,#D1E4FA,#E8F2FC
