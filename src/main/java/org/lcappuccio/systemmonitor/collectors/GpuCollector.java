@@ -105,7 +105,7 @@ public class GpuCollector implements Collector<GpuMetrics> {
     }
   }
 
-  private static String formatHexLabel(String vendor, String device) {
+  static String formatHexLabel(String vendor, String device) {
     if ("1002".equals(vendor)) {
       return "AMD (" + device + ")";
     }
@@ -132,7 +132,7 @@ public class GpuCollector implements Collector<GpuMetrics> {
     return null;
   }
 
-  private static Path findPciIdsPath() {
+  static Path findPciIdsPath() {
     Path[] candidates = {
         Paths.get("/usr/share/misc/pci.ids"),
         Paths.get("/usr/share/hwdata/pci.ids")

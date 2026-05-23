@@ -1,9 +1,13 @@
 package org.lcappuccio.systemmonitor.collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.lcappuccio.systemmonitor.config.AppConfig;
@@ -107,9 +111,54 @@ class GpuCollectorTest {
 
       GpuMetrics m = metricsOpt.get();
       if (m.vramTotalBytes() > 0) {
-        assertTrue(m.vramUsedBytes() <= m.vramTotalBytes(),
-            "VRAM used should not exceed total");
+      assertTrue(m.vramUsedBytes() <= m.vramTotalBytes(),
+          "VRAM used should not exceed total");
       }
     }
+  }
+
+  @Test
+  void lookupInPciIds_findsDeviceByVendorAndDeviceId() {
+    Path ids = Paths.get("src/test/resources/test-pci.ids");
+    String name = GpuCollector.lookupInPciIds(ids, "1002", "7550");
+    assertEquals("Navi 33 [Radeon RX 7700S/7600/7600M]", name);
+  }
+
+  @Test
+  void lookupInPciIds_returnsNullForUnknownDevice() {
+    Path ids = Paths.get("src/test/resources/test-pci.ids");
+    String name = GpuCollector.lookupInPciIds(ids, "1002", "0000");
+    assertNull(name);
+  }
+
+  @Test
+  void lookupInPciIds_returnsNullForUnknownVendor() {
+    Path ids = Paths.get("src/test/resources/test-pci.ids");
+    String name = GpuCollector.lookupInPciIds(ids, "ffff", "0000");
+    assertNull(name);
+  }
+
+  @Test
+  void lookupInPciIds_findsNvidiaDevice() {
+    Path ids = Paths.get("src/test/resources/test-pci.ids");
+    String name = GpuCollector.lookupInPciIds(ids, "10de", "2482");
+    assertEquals("GA102 [GeForce RTX 3070 Ti]", name);
+  }
+
+  @Test
+  void formatHexLabel_amdReturnsShortLabel() {
+    assertEquals("AMD (7550)", GpuCollector.formatHexLabel("1002", "7550"));
+  }
+
+  @Test
+  void formatHexLabel_nonAmdIncludesDeviceId() {
+    String label = GpuCollector.formatHexLabel("10de", "2482");
+    assertTrue(label.contains("2482"), "Label should contain device ID: " + label);
+    assertFalse(label.equals("10de:2482"), "Label should resolve vendor name if pci.ids available");
+  }
+
+  @Test
+  void formatHexLabel_missingVendorReturnsColonFormat() {
+    assertEquals("unknown:0000", GpuCollector.formatHexLabel("unknown", "0000"));
   }
 }
