@@ -28,6 +28,7 @@ public class CpuCollector implements Collector<CpuMetrics> {
   private final List<Integer> coreIds = new ArrayList<>();
   private String hwmonPath = null;
   private String tempInputPath = null;
+  private String cpuModel = null;
 
   private CollectorStatus status = CollectorStatus.UNAVAILABLE;
 
@@ -37,6 +38,7 @@ public class CpuCollector implements Collector<CpuMetrics> {
 
   @Override
   public void initialize() {
+    discoverCpuModel();
     discoverCores();
     discoverHwmon();
 
@@ -102,6 +104,18 @@ public class CpuCollector implements Collector<CpuMetrics> {
       }
     } catch (IOException e) {
       LOG.error("Failed to discover hwmon: {}", e.getMessage());
+    }
+  }
+
+  private void discoverCpuModel() {
+    try (var lines = Files.lines(Path.of("/proc/cpuinfo"))) {
+      cpuModel = lines
+          .filter(l -> l.startsWith("model name"))
+          .map(l -> l.substring(l.indexOf(':') + 1).trim())
+          .findFirst()
+          .orElse(null);
+    } catch (IOException e) {
+      LOG.warn("Failed to read CPU model name: {}", e.getMessage());
     }
   }
 
@@ -242,5 +256,9 @@ public class CpuCollector implements Collector<CpuMetrics> {
 
   public List<Integer> getCoreIds() {
     return List.copyOf(coreIds);
+  }
+
+  public String getCpuModel() {
+    return cpuModel;
   }
 }

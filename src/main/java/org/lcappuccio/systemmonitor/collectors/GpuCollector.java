@@ -26,6 +26,7 @@ public class GpuCollector implements Collector<GpuMetrics> {
   private String vramTempPath = null;
   private String powerPath = null;
   private String fanPath = null;
+  private String gpuModel = null;
 
   private CollectorStatus status = CollectorStatus.UNAVAILABLE;
 
@@ -40,6 +41,7 @@ public class GpuCollector implements Collector<GpuMetrics> {
       LOG.error("GPU DRM path {} not found", drmPath);
     }
 
+    discoverGpuModel();
     discoverHwmon();
 
     boolean hwmonValid = hwmonPath != null
@@ -59,6 +61,24 @@ public class GpuCollector implements Collector<GpuMetrics> {
     }
 
     LOG.info("GpuCollector initialized: status={}", status);
+  }
+
+  private void discoverGpuModel() {
+    if (drmPath == null) {
+      return;
+    }
+    Path productName = Paths.get(drmPath, "device", "product_name");
+    if (Files.exists(productName)) {
+      try {
+        String name = Files.readString(productName).trim();
+        if (!name.isEmpty()) {
+          gpuModel = name;
+          LOG.info("Discovered GPU model: {}", gpuModel);
+        }
+      } catch (IOException e) {
+        LOG.warn("Failed to read GPU product_name: {}", e.getMessage());
+      }
+    }
   }
 
   private void discoverHwmon() {
@@ -230,5 +250,9 @@ public class GpuCollector implements Collector<GpuMetrics> {
   @Override
   public String getName() {
     return "GPU";
+  }
+
+  public String getGpuModel() {
+    return gpuModel;
   }
 }

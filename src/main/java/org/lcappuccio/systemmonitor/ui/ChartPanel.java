@@ -51,14 +51,19 @@ public class ChartPanel {
   private final Timeline timeline;
 
   private final AppConfig appConfig;
+  private final String cpuLabel;
+  private final String gpuLabel;
 
   /**
    * Constructs a {@code ChartPanel}, builds all chart groups, and subscribes to all rows.
    *
    * @param rows      the observable list of metric rows to monitor
    * @param appConfig the configuration object
+   * @param cpuLabel  the CPU model name for chart legends
+   * @param gpuLabel  the GPU model name for chart legends
    */
-  public ChartPanel(ObservableList<MetricRow> rows, AppConfig appConfig) {
+  public ChartPanel(ObservableList<MetricRow> rows, AppConfig appConfig,
+      String cpuLabel, String gpuLabel) {
     this.history = new HashMap<>();
     this.lastKnownValue = new HashMap<>();
     this.seriesMap = new HashMap<>();
@@ -69,6 +74,8 @@ public class ChartPanel {
     this.tickSeconds = appConfig.getTickSeconds();
     this.timeline = buildTimeline();
     this.appConfig = appConfig;
+    this.cpuLabel = cpuLabel;
+    this.gpuLabel = gpuLabel;
 
     List<ChartGroup> groups = buildGroups(rows);
     for (ChartGroup group : groups) {
@@ -109,11 +116,11 @@ public class ChartPanel {
 
       tempKeys.add(MetricKey.Cpu.TEMPERATURE.key());
       tempColors.add(appConfig.getColorCpu());
-      tempLabels.add("CPU");
+      tempLabels.add(cpuLabel);
 
       tempKeys.add(MetricKey.Gpu.TEMPERATURE.key());
       tempColors.add(appConfig.getColorGpu());
-      tempLabels.add("GPU");
+      tempLabels.add(gpuLabel);
 
       tempKeys.add(MetricKey.Gpu.VRAM_TEMPERATURE.key());
       tempColors.add(appConfig.getColorVram());
@@ -141,7 +148,7 @@ public class ChartPanel {
           List.of(MetricKey.Cpu.LOAD.key(), MetricKey.Gpu.LOAD.key(),
               MetricKey.Gpu.VRAM_LOAD.key()),
           List.of(appConfig.getColorCpu(), appConfig.getColorGpu(), appConfig.getColorVram()),
-          List.of("CPU", "GPU", "VRAM")
+          List.of(cpuLabel, gpuLabel, "VRAM")
       ));
     }
     if (appConfig.isChartMemoryEnabled()) {

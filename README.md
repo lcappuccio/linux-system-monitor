@@ -15,8 +15,18 @@ Displays CPU, GPU, memory, storage, filesystem, and network statistics in a live
 - JDK 21+
 - Maven 3.9+
 - GPU metrics are targeted at AMD, I do not have an nvidia or intel GPU to test
+- **SATA SSD temperature monitoring** requires the `drivetemp` kernel module.
+  Load it and add it to `/etc/modules` to persist across reboots:
 
-All metrics are read from standard Linux kernel interfaces (`/proc`, `/sys`). No additional drivers or user-space tools required.
+  ```bash
+  # Load now
+  sudo modprobe drivetemp
+
+  # Persist across reboots
+  echo "drivetemp" | sudo tee -a /etc/modules
+  ```
+
+All metrics are read from standard Linux kernel interfaces (`/proc`, `/sys`). No additional user-space tools required.
 
 ## Build
 
@@ -46,7 +56,7 @@ mvn javafx:run
 | CPU | Temperature, load, per-core frequency |
 | Memory | Used/total RAM, used/total swap |
 | GPU | Temperature, load, VRAM used/total, VRAM temp, VRAM load, power (PPT) |
-| Disks | NVMe temperature (model name from sysfs) |
+| Disks | NVMe and SATA temperatures via hwmon (nvme + drivetemp kernel module) |
 | Filesystems | Used/free/total for `/`, `/home`, `/data`, `/data-backup` |
 | Network | LAN IP, link speed, upload/download rate |
 
@@ -86,7 +96,7 @@ disk.sata.devices=/dev/sda,/dev/sdb
 fs.mountpoints=/,/home,/data,/data-backup
 poll.interval.default=2
 poll.interval.filesystem=60
-poll.interval.disk.temp=15
+poll.interval.disk.temp=60
 
 # valid values: KBps, MBps, GB/s, Kbps, Mbps, Gbps
 network.speed.unit=Kbps
