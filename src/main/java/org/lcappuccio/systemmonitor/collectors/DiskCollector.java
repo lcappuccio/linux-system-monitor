@@ -46,6 +46,11 @@ public class DiskCollector implements Collector<DiskMetrics> {
     this.sataDevices = config.getDiskSataDevices();
   }
 
+  // test-only constructor
+  DiskCollector(List<String> sataDevices) {
+    this.sataDevices = sataDevices;
+  }
+
   @Override
   public void initialize() {
     discoverNvme();
@@ -92,7 +97,11 @@ public class DiskCollector implements Collector<DiskMetrics> {
   }
 
   private String discoverNvmeModel() {
-    try (Stream<Path> entries = Files.list(Paths.get("/sys/block"))) {
+    return discoverNvmeModel(Paths.get("/sys/block"));
+  }
+
+  static String discoverNvmeModel(Path blockRoot) {
+    try (Stream<Path> entries = Files.list(blockRoot)) {
       Optional<Path> nvmeBlock = entries
           .filter(p -> p.getFileName().toString().startsWith("nvme"))
           .findFirst();
@@ -138,7 +147,11 @@ public class DiskCollector implements Collector<DiskMetrics> {
   }
 
   private String discoverSataModel(String devName) {
-    Path modelFile = Paths.get("/sys/block/" + devName + "/device/model");
+    return discoverSataModel(devName, Paths.get("/sys/block"));
+  }
+
+  static String discoverSataModel(String devName, Path blockRoot) {
+    Path modelFile = blockRoot.resolve(devName + "/device/model");
     if (Files.exists(modelFile)) {
       try {
         return Files.readString(modelFile).trim();
@@ -223,7 +236,7 @@ public class DiskCollector implements Collector<DiskMetrics> {
     return NO_TEMP;
   }
 
-  private double parseSmartctlLine(String line) {
+  static double parseSmartctlLine(String line) {
     String[] parts = line.trim().split("\\s+");
     if (parts.length >= 10) {
       try {
