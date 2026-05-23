@@ -9,6 +9,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
 import javafx.scene.Parent;
+import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TreeItem;
@@ -17,6 +18,7 @@ import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.util.Duration;
 import org.lcappuccio.systemmonitor.collectors.Collector;
 import org.lcappuccio.systemmonitor.collectors.CpuCollector;
@@ -46,6 +48,7 @@ public class MainWindow {
 
   private final ChartPanel chartPanel;
   private final Label heapLabel = new Label();
+  private final Label versionLabel = new Label();
   private final ObservableList<MetricRow> rows;
   private final PollerService pollerService;
   private final SplitPane root;
@@ -53,16 +56,19 @@ public class MainWindow {
   private final GpuCollector gpuCollector;
   private final DiskCollector diskCollector;
   private final TreeItem<MetricRow> rootItem;
+  private final String version;
 
   private Timeline heapTimer;
 
   /**
    * Constructs the main window with the given application configuration.
    *
-   * @param config the loaded application configuration
+   * @param config  the loaded application configuration
+   * @param version the application version string
    */
-  public MainWindow(AppConfig config) {
+  public MainWindow(AppConfig config, String version) {
     LOG.info("Building main window");
+    this.version = version;
     this.rows = FXCollections.observableArrayList();
 
     this.cpuCollector = new CpuCollector();
@@ -335,14 +341,18 @@ public class MainWindow {
     netTreeItem.getChildren().add(new TreeItem<>(netDownRow));
   }
 
-  private javafx.scene.layout.HBox buildStatusBar(AppConfig appConfig) {
-    if ("dark".equals(appConfig.getUiTheme())) {
-      heapLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #BBBBBB; -fx-padding: 2 6 2 6;");
-    } else {
-      heapLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #0E0E0E; -fx-padding: 2 6 2 6;");
-    }
+  private HBox buildStatusBar(AppConfig appConfig) {
+    String labelStyle = "dark".equals(appConfig.getUiTheme())
+        ? "-fx-font-size: 11px; -fx-text-fill: #BBBBBB; -fx-padding: 2 6 2 6;"
+        : "-fx-font-size: 11px; -fx-text-fill: #0E0E0E; -fx-padding: 2 6 2 6;";
+    heapLabel.setStyle(labelStyle);
+    versionLabel.setStyle(labelStyle);
+    versionLabel.setText("v" + version);
     updateHeapLabel();
-    javafx.scene.layout.HBox bar = new javafx.scene.layout.HBox(heapLabel);
+    javafx.scene.layout.Region spacer = new javafx.scene.layout.Region();
+    HBox.setHgrow(spacer, Priority.ALWAYS);
+    HBox bar = new HBox(heapLabel, spacer, versionLabel);
+    bar.setAlignment(Pos.CENTER_LEFT);
     bar.setStyle("-fx-border-color: #cccccc; -fx-border-width: 1 0 0 0;");
     return bar;
   }
