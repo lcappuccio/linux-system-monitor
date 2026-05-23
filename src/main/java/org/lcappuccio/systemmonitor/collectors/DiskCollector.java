@@ -53,6 +53,8 @@ public class DiskCollector implements Collector<DiskMetrics> {
 
   @Override
   public void initialize() {
+    disks.clear();
+    diskLabels.clear();
     discoverNvme();
     discoverSataDisks();
 
@@ -212,8 +214,12 @@ public class DiskCollector implements Collector<DiskMetrics> {
           .start();
 
       boolean exited = process.waitFor(5, TimeUnit.SECONDS);
-      if (!exited || process.exitValue() != 0) {
-        LOG.error("smartctl exit code for {}: {}", device, process.exitValue());
+      if (!exited) {
+        LOG.error("smartctl timed out for {}", device);
+        return NO_TEMP;
+      }
+      if (process.exitValue() != 0) {
+        LOG.error("smartctl exit code {} for {}", process.exitValue(), device);
         return NO_TEMP;
       }
 
