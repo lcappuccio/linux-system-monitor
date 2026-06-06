@@ -170,7 +170,6 @@ public class MainWindow {
         setGraphic(null);
       }
     });
-    metricCol.setPrefWidth(300);
 
     TreeTableColumn<MetricRow, String> valueCol = new TreeTableColumn<>("Value");
     valueCol.setCellValueFactory(cell -> {
@@ -184,7 +183,6 @@ public class MainWindow {
       }
       return row.valueProperty();
     });
-    valueCol.setPrefWidth(120);
 
     TreeTableView<MetricRow> treeTable = new TreeTableView<>();
     treeTable.getColumns().add(metricCol);
@@ -193,8 +191,8 @@ public class MainWindow {
     treeTable.setShowRoot(false);
     treeTable.setColumnResizePolicy(TreeTableView.CONSTRAINED_RESIZE_POLICY);
 
-    metricCol.prefWidthProperty().bind(treeTable.widthProperty().multiply(0.40));
-    valueCol.prefWidthProperty().bind(treeTable.widthProperty().multiply(0.60));
+    metricCol.prefWidthProperty().bind(treeTable.widthProperty().multiply(0.65));
+    valueCol.prefWidthProperty().bind(treeTable.widthProperty().multiply(0.35));
 
     treeTable.setPlaceholder(new javafx.scene.control.Label("No data available"));
 
