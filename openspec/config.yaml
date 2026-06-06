@@ -1,0 +1,31 @@
+schema: spec-driven
+
+context: |
+  See AGENTS.md for full project context. Key facts:
+
+  Tech stack: Java 21, JavaFX 21, Maven, SLF4J+Logback, JUnit 5.
+  Target: Ubuntu with AMD GPU. Linux-only, no Windows/macOS.
+
+  Source layout (org.lcappuccio.systemmonitor):
+    Main.java, config/AppConfig.java
+    model/ — CpuMetrics, GpuMetrics, MemoryMetrics, DiskMetrics,
+             FileSystemMetrics, NetworkMetrics, MetricKey (all immutable records)
+    collectors/ — Collector<T> interface, CollectorStatus enum,
+                  CpuCollector, GpuCollector, MemoryCollector, DiskCollector,
+                  FileSystemCollector, NetworkCollector
+    ui/ — MainWindow, MetricRow, MetricValueParser, ChartPanel, ChartGroup
+    poller/ — PollerService (ScheduledExecutorService, Platform.runLater)
+
+  Strict prohibitions (violations will be rejected):
+    - No Lombok. All constructors/getters/builders explicit.
+    - No blocking I/O on any thread other than the collector's scheduled thread.
+    - No null returns. Use Optional<T> for single values, empty collections otherwise.
+    - Optional<T> as return type only — never as parameter or field type.
+    - No leaky interfaces. Interface signatures use java.* types only.
+    - No mutable result objects. Collector output must be immutable records.
+
+  Build/test commands:
+    mvn clean package       # build
+    mvn javafx:run          # development run
+    mvn test                # tests
+    mvn checkstyle:check sonar:sonar -Psonar  # code quality
